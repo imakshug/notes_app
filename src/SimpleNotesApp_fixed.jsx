@@ -70,11 +70,6 @@ function SimpleNotesApp({ onThemeChange }) {
   const [viewMode, setViewMode] = useState('grid');
   const [editingNote, setEditingNote] = useState(null);
   const [enableMoodDetection, setEnableMoodDetection] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
-  const [linkText, setLinkText] = useState('');
 
   // Theme configurations
   const themes = {
@@ -86,7 +81,6 @@ function SimpleNotesApp({ onThemeChange }) {
       headerText: "text-green-900",
       subText: "text-green-700",
       accentText: "text-amber-600",
-      placeholderText: "placeholder-green-500",
       brainEmoji: "🧠",
       decorative: ["🌻", "🌸"],
       createBg: "bg-amber-50/90",
@@ -104,47 +98,46 @@ function SimpleNotesApp({ onThemeChange }) {
       // Background theme
       appBackground: "bg-gradient-to-br from-amber-50 via-green-50 to-yellow-100",
       floatingElements: [
-        { emoji: "🌻", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-70" },
-        { emoji: "🌸", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-75" },
-        { emoji: "🌿", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-70", delay: "delay-1000" },
-        { emoji: "🍄", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-2000" },
-        { emoji: "🌾", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-70", delay: "delay-500" },
-        { emoji: "🌼", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-1500" }
+        { emoji: "🌻", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-30" },
+        { emoji: "🌸", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-40" },
+        { emoji: "🌿", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-25", delay: "delay-1000" },
+        { emoji: "🍄", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-35", delay: "delay-2000" },
+        { emoji: "🌾", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-20", delay: "delay-500" },
+        { emoji: "🌼", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-30", delay: "delay-1500" }
       ],
       overlayGradient: "from-green-100/20 to-amber-100/20"
     },
     darkAcademia: {
       name: "Dark Academia",
       emoji: "🕯️",
-      background: "bg-amber-50/90",
-      border: "border-amber-800/70",
-      headerText: "text-amber-900",
-      subText: "text-amber-800",
-      accentText: "text-amber-700",
-      placeholderText: "placeholder-amber-600",
+      background: "bg-stone-900/90",
+      border: "border-amber-700/70",
+      headerText: "text-amber-100",
+      subText: "text-amber-200",
+      accentText: "text-amber-300",
       brainEmoji: "🦉",
       decorative: ["📚", "🕯️"],
-      createBg: "bg-amber-100/60",
-      createBorder: "border-amber-700/60",
-      createText: "text-amber-900",
+      createBg: "bg-amber-900/40",
+      createBorder: "border-amber-600/60",
+      createText: "text-amber-100",
       createDecor: "✒️",
-      editBg: "bg-stone-100/50",
-      editBorder: "border-stone-700/60",
-      editText: "text-stone-900",
+      editBg: "bg-stone-800/50",
+      editBorder: "border-stone-600/60",
+      editText: "text-stone-100",
       editDecor: "📖",
-      buttonGradient: "from-amber-600 to-stone-700",
-      buttonHover: "from-amber-500 to-stone-600",
-      buttonText: "text-amber-50",
+      buttonGradient: "from-amber-700 to-stone-800",
+      buttonHover: "from-amber-600 to-stone-700",
+      buttonText: "text-amber-100",
       buttonBorder: "border-amber-700",
-      // Background theme - dark academic colors with better contrast
+      // Background theme - dark academic colors
       appBackground: "bg-gradient-to-br from-stone-900 via-amber-900 to-stone-800",
       floatingElements: [
-        { emoji: "📚", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-90" },
-        { emoji: "🕯️", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-95" },
-        { emoji: "🏛️", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-85", delay: "delay-1000" },
-        { emoji: "🦉", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-90", delay: "delay-2000" },
-        { emoji: "✒️", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-80", delay: "delay-500" },
-        { emoji: "📜", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-85", delay: "delay-1500" }
+        { emoji: "📚", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-30" },
+        { emoji: "🕯️", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-35" },
+        { emoji: "🏛️", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-25", delay: "delay-1000" },
+        { emoji: "🦉", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-30", delay: "delay-2000" },
+        { emoji: "✒️", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-20", delay: "delay-500" },
+        { emoji: "📜", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-25", delay: "delay-1500" }
       ],
       overlayGradient: "from-stone-900/30 to-amber-900/20"
     },
@@ -156,7 +149,6 @@ function SimpleNotesApp({ onThemeChange }) {
       headerText: "text-slate-100",
       subText: "text-slate-200",
       accentText: "text-slate-300",
-      placeholderText: "placeholder-slate-400",
       brainEmoji: "🌙",
       decorative: ["🌙", "⭐"],
       createBg: "bg-slate-700/30",
@@ -174,12 +166,12 @@ function SimpleNotesApp({ onThemeChange }) {
       // Background theme - dark midnight colors
       appBackground: "bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800",
       floatingElements: [
-        { emoji: "🌙", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-80" },
-        { emoji: "⭐", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-85" },
-        { emoji: "🌌", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-75", delay: "delay-1000" },
-        { emoji: "🌟", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-80", delay: "delay-2000" },
-        { emoji: "✨", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-70", delay: "delay-500" },
-        { emoji: "💫", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-1500" }
+        { emoji: "🌙", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-20" },
+        { emoji: "⭐", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-25" },
+        { emoji: "🌌", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-15", delay: "delay-1000" },
+        { emoji: "🌟", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-20", delay: "delay-2000" },
+        { emoji: "✨", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-10", delay: "delay-500" },
+        { emoji: "💫", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-15", delay: "delay-1500" }
       ],
       overlayGradient: "from-slate-900/20 to-gray-900/30"
     },
@@ -191,7 +183,6 @@ function SimpleNotesApp({ onThemeChange }) {
       headerText: "text-pink-900",
       subText: "text-pink-700",
       accentText: "text-pink-600",
-      placeholderText: "placeholder-pink-500",
       brainEmoji: "🦋",
       decorative: ["🌸", "🍃"],
       createBg: "bg-green-50/90",
@@ -209,12 +200,12 @@ function SimpleNotesApp({ onThemeChange }) {
       // Background theme - soft pink colors
       appBackground: "bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100",
       floatingElements: [
-        { emoji: "🌸", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-90" },
-        { emoji: "🌺", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-95" },
-        { emoji: "🦋", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-85", delay: "delay-1000" },
-        { emoji: "🌷", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-90", delay: "delay-2000" },
-        { emoji: "🍃", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-80", delay: "delay-500" },
-        { emoji: "💐", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-85", delay: "delay-1500" }
+        { emoji: "🌸", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-30" },
+        { emoji: "🌺", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-35" },
+        { emoji: "🦋", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-25", delay: "delay-1000" },
+        { emoji: "🌷", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-30", delay: "delay-2000" },
+        { emoji: "🍃", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-20", delay: "delay-500" },
+        { emoji: "💐", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-25", delay: "delay-1500" }
       ],
       overlayGradient: "from-pink-100/20 to-rose-100/25"
     },
@@ -226,7 +217,6 @@ function SimpleNotesApp({ onThemeChange }) {
       headerText: "text-blue-900",
       subText: "text-blue-700",
       accentText: "text-teal-600",
-      placeholderText: "placeholder-blue-500",
       brainEmoji: "🐋",
       decorative: ["🌊", "🐚"],
       createBg: "bg-teal-50/90",
@@ -244,12 +234,12 @@ function SimpleNotesApp({ onThemeChange }) {
       // Background theme - ocean colors
       appBackground: "bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-100",
       floatingElements: [
-        { emoji: "🌊", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-90" },
-        { emoji: "🐚", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-95" },
-        { emoji: "🐋", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-85", delay: "delay-1000" },
-        { emoji: "⛵", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-90", delay: "delay-2000" },
-        { emoji: "🏖️", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-80", delay: "delay-500" },
-        { emoji: "🌅", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-85", delay: "delay-1500" }
+        { emoji: "🌊", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-30" },
+        { emoji: "🐚", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-35" },
+        { emoji: "🐋", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-25", delay: "delay-1000" },
+        { emoji: "⛵", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-30", delay: "delay-2000" },
+        { emoji: "🏖️", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-20", delay: "delay-500" },
+        { emoji: "🌅", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-25", delay: "delay-1500" }
       ],
       overlayGradient: "from-blue-100/20 to-teal-100/25"
     },
@@ -261,7 +251,6 @@ function SimpleNotesApp({ onThemeChange }) {
       headerText: "text-orange-900",
       subText: "text-orange-700",
       accentText: "text-red-600",
-      placeholderText: "placeholder-orange-500",
       brainEmoji: "🦅",
       decorative: ["🌅", "🏔️"],
       createBg: "bg-red-50/90",
@@ -279,12 +268,12 @@ function SimpleNotesApp({ onThemeChange }) {
       // Background theme - sunset colors
       appBackground: "bg-gradient-to-br from-orange-100 via-red-50 to-yellow-100",
       floatingElements: [
-        { emoji: "🌅", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-90" },
-        { emoji: "🏔️", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-95" },
-        { emoji: "🦅", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-85", delay: "delay-1000" },
-        { emoji: "🌄", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-90", delay: "delay-2000" },
-        { emoji: "🌻", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-80", delay: "delay-500" },
-        { emoji: "🍂", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-85", delay: "delay-1500" }
+        { emoji: "🌅", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-30" },
+        { emoji: "🏔️", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-35" },
+        { emoji: "🦅", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-25", delay: "delay-1000" },
+        { emoji: "🌄", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-30", delay: "delay-2000" },
+        { emoji: "🌻", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-20", delay: "delay-500" },
+        { emoji: "🍂", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-25", delay: "delay-1500" }
       ],
       overlayGradient: "from-orange-100/20 to-red-100/25"
     },
@@ -296,7 +285,6 @@ function SimpleNotesApp({ onThemeChange }) {
       headerText: "text-green-900",
       subText: "text-green-700",
       accentText: "text-emerald-600",
-      placeholderText: "placeholder-green-500",
       brainEmoji: "🦌",
       decorative: ["🌲", "🍃"],
       createBg: "bg-emerald-50/90",
@@ -314,12 +302,12 @@ function SimpleNotesApp({ onThemeChange }) {
       // Background theme - forest colors
       appBackground: "bg-gradient-to-br from-green-100 via-emerald-50 to-lime-100",
       floatingElements: [
-        { emoji: "🌲", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-70" },
-        { emoji: "🍃", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-75" },
-        { emoji: "🦌", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-70", delay: "delay-1000" },
-        { emoji: "🌿", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-2000" },
-        { emoji: "🌱", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-70", delay: "delay-500" },
-        { emoji: "🦋", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-1500" }
+        { emoji: "🌲", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-30" },
+        { emoji: "🍃", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-35" },
+        { emoji: "🦌", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-25", delay: "delay-1000" },
+        { emoji: "🌿", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-30", delay: "delay-2000" },
+        { emoji: "🌱", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-20", delay: "delay-500" },
+        { emoji: "🦋", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-25", delay: "delay-1500" }
       ],
       overlayGradient: "from-green-100/20 to-emerald-100/25"
     }
@@ -354,25 +342,6 @@ function SimpleNotesApp({ onThemeChange }) {
     }
   };
 
-  const handleImageFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Check if file is an image
-      if (file.type.startsWith('image/')) {
-        setImageFile(file);
-        
-        // Create preview URL
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setImagePreview(e.target.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        alert('Please select an image file');
-      }
-    }
-  };
-
   // Add/Edit note
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -396,10 +365,7 @@ function SimpleNotesApp({ onThemeChange }) {
         isArchived: false,
         color: selectedColor,
         labels: [...selectedLabels],
-        enableMoodDetection,
-        imageUrl: imagePreview,
-        linkUrl: linkUrl.trim(),
-        linkText: linkText.trim() || linkUrl.trim()
+        enableMoodDetection
       };
 
       if (editingNote) {
@@ -409,51 +375,36 @@ function SimpleNotesApp({ onThemeChange }) {
             : note
         ));
         setEditingNote(null);
-        setShowCreateForm(false);
       } else {
         const newNote = {
           ...noteData,
           id: Date.now()
         };
         setNotes([...notes, newNote]);
-        setShowCreateForm(false);
       }
       
       setTitle('');
       setContent('');
       setSelectedColor('');
       setSelectedLabels([]);
-      setImageFile(null);
-      setImagePreview('');
-      setLinkUrl('');
-      setLinkText('');
     }
   };
 
   const handleEdit = (note) => {
     setEditingNote(note);
-    setShowCreateForm(true);
     setTitle(note.title);
     setContent(note.content);
     setSelectedColor(note.color || '');
     setSelectedLabels(note.labels || []);
     setEnableMoodDetection(note.enableMoodDetection || false);
-    setImagePreview(note.imageUrl || '');
-    setLinkUrl(note.linkUrl || '');
-    setLinkText(note.linkText || '');
   };
 
   const cancelEdit = () => {
     setEditingNote(null);
-    setShowCreateForm(false);
     setTitle('');
     setContent('');
     setSelectedColor('');
     setSelectedLabels([]);
-    setImageFile(null);
-    setImagePreview('');
-    setLinkUrl('');
-    setLinkText('');
   };
 
   const deleteNote = (id) => {
@@ -490,6 +441,9 @@ function SimpleNotesApp({ onThemeChange }) {
     setSelectedLabels(selectedLabels.filter(label => label !== labelToRemove));
   };
 
+  // Get all unique labels from notes
+  const allLabels = [...new Set(notes.flatMap(note => note.labels || []))];
+
   // Filter notes based on search and archive status
   const filteredNotes = notes.filter(note => {
     const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -524,26 +478,13 @@ function SimpleNotesApp({ onThemeChange }) {
   };
 
   return (
-    <div className={`min-h-screen ${theme.appBackground} p-4 relative overflow-hidden`}>
-      {/* Floating decoration elements */}
-      {theme.floatingElements.map((element, index) => (
-        <div
-          key={index}
-          className={`fixed ${element.position} ${element.size} ${element.opacity} ${element.animation} pointer-events-none z-0 ${element.delay || ''}`}
-          style={{
-            animationDelay: element.delay ? '1s' : '0s'
-          }}
-        >
-          {element.emoji}
-        </div>
-      ))}
-      
-      <div className="max-w-4xl mx-auto relative z-10">
+    <div className={`min-h-screen ${theme.background} p-4`}>
+      <div className="max-w-4xl mx-auto">
         
         {/* Header */}
         <div className="text-center mb-6">
           <h1 className={`text-3xl font-bold ${theme.headerText} mb-2 font-cedarville`}>
-            My Notes
+            My Notes {theme.brainEmoji} 
           </h1>
           <p className={`${theme.subText} text-sm`}>
             Your moodboard for life’s notes
@@ -574,7 +515,7 @@ function SimpleNotesApp({ onThemeChange }) {
             placeholder="Search notes, labels..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`flex-1 px-4 py-2 border rounded-lg ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-blue-300`}
+            className={`flex-1 px-4 py-2 border rounded-lg ${theme.background} ${theme.border} ${theme.subText} placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300`}
           />
           <div className="flex gap-2">
             <button
@@ -593,21 +534,10 @@ function SimpleNotesApp({ onThemeChange }) {
             >
               {viewMode === 'grid' ? '☰ List' : '⊞ Grid'}
             </button>
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className={`px-4 py-2 rounded-lg border transition-all ${
-                showCreateForm || editingNote
-                  ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder}` 
-                  : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-50`
-              }`}
-            >
-              {showCreateForm || editingNote ? '✖ Close' : '✍ New Note'}
-            </button>
           </div>
         </div>
 
         {/* Create/Edit Note Form */}
-        {(showCreateForm || editingNote) && (
         <form onSubmit={handleSubmit} className={`${editingNote ? theme.editBg : theme.createBg} ${editingNote ? theme.editBorder : theme.createBorder} border rounded-lg p-4 mb-6 shadow-sm`}>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">{editingNote ? theme.editDecor : theme.createDecor}</span>
@@ -621,14 +551,14 @@ function SimpleNotesApp({ onThemeChange }) {
             placeholder="Note title..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md mb-3 ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-blue-300`}
+            className={`w-full px-3 py-2 border rounded-md mb-3 ${theme.background} ${theme.border} ${theme.subText} placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300`}
           />
           <textarea
             placeholder="Write your note here..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows="4"
-            className={`w-full px-3 py-2 border rounded-md mb-3 ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none`}
+            className={`w-full px-3 py-2 border rounded-md mb-3 ${theme.background} ${theme.border} ${theme.subText} placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none`}
           />
           
           {/* Color Picker */}
@@ -646,47 +576,6 @@ function SimpleNotesApp({ onThemeChange }) {
                   title={color.name}
                 />
               ))}
-            </div>
-          </div>
-
-          {/* Image Upload */}
-          <div className="mb-3">
-            <label className={`block text-sm font-medium ${editingNote ? theme.editText : theme.createText} mb-2`}>🖼️ Upload Image:</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageFileChange}
-              className={`w-full px-3 py-2 border rounded-md text-sm ${theme.background} ${theme.border} ${theme.subText} focus:outline-none focus:ring-2 focus:ring-blue-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100`}
-            />
-            {imagePreview && (
-              <div className="mt-2">
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="max-w-full h-32 object-contain rounded-md border"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Link */}
-          <div className="mb-3">
-            <label className={`block text-sm font-medium ${editingNote ? theme.editText : theme.createText} mb-2`}>🔗 Link:</label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="url"
-                placeholder="https://example.com"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                className={`flex-1 px-3 py-2 border rounded-md text-sm ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-blue-300`}
-              />
-              <input
-                type="text"
-                placeholder="Link text"
-                value={linkText}
-                onChange={(e) => setLinkText(e.target.value)}
-                className={`w-32 px-3 py-2 border rounded-md text-sm ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-blue-300`}
-              />
             </div>
           </div>
 
@@ -761,7 +650,6 @@ function SimpleNotesApp({ onThemeChange }) {
             )}
           </div>
         </form>
-        )}
 
         {/* Notes Display */}
         <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}`}>
@@ -785,34 +673,6 @@ function SimpleNotesApp({ onThemeChange }) {
                 <p className={`${theme.subText} text-sm mb-2 whitespace-pre-wrap`}>
                   {note.content}
                 </p>
-
-                {/* Image display */}
-                {note.imageUrl && (
-                  <div className="mb-2">
-                    <img 
-                      src={note.imageUrl} 
-                      alt="Note attachment" 
-                      className="max-w-full h-auto rounded-lg shadow-sm max-h-48 object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Link display */}
-                {note.linkUrl && (
-                  <div className="mb-2">
-                    <a 
-                      href={note.linkUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-1 text-sm ${theme.accentText} hover:underline`}
-                    >
-                      🔗 {note.linkText || note.linkUrl}
-                    </a>
-                  </div>
-                )}
                 
                 {/* Labels */}
                 {note.labels && note.labels.length > 0 && (
