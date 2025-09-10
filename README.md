@@ -1,7 +1,7 @@
 # AI Notes App
 
 A React-based notes application with AI mood detection and multiple themes.
-
+![alt text](<Screenshot 2025-09-10 223359.png>)
 ## Features
 
 - **AI Mood Detection**: Analyzes note content to detect emotions
