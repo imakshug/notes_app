@@ -5,7 +5,14 @@
   "description": "AI-powered notes app with mood detection and beautiful themes",
   "author": "Your Name",
   "license": "MIT",
-  "keywords": ["notes", "ai", "mood-detection", "react", "tailwindcss", "themes"],
+  "keywords": [
+    "notes",
+    "ai",
+    "mood-detection",
+    "react",
+    "tailwindcss",
+    "themes"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/ai-notes-app.git"
@@ -19,18 +26,25 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@tiptap/extension-color": "^3.4.2",
     "@tiptap/extension-font-family": "^3.4.2",
     "@tiptap/extension-placeholder": "^3.4.2",
     "@tiptap/extension-text-style": "^3.4.2",
     "@tiptap/react": "^3.4.2",
     "@tiptap/starter-kit": "^3.4.2",
+    "canvas-sketch-util": "^1.10.0",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.2",
     "lucide-react": "^0.542.0",
+    "quill": "^2.0.3",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dom": "^19.1.1",
+    "react-quill": "^2.0.0",
+    "react-sortable-hoc": "^2.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

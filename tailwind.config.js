@@ -17,6 +17,10 @@ module.exports = {
           400: '#b57edc',
         },
       },
+      fontFamily: {
+        'cedarville': ['Cedarville Cursive', 'cursive'],
+        'edu-nsw': ['Edu NSW ACT Cursive', 'cursive'],
+      },
     },
   },
   plugins: [],
