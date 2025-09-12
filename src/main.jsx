@@ -5,40 +5,22 @@ import App from './App.jsx'
 
 console.log('🚀 Starting React App...');
 
-try {
-  const rootElement = document.getElementById('root');
-  if (!rootElement) {
-    throw new Error('Root element not found');
-  }
-  
-  const root = createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <App />
-    </StrictMode>
-  );
+const root = createRoot(document.getElementById('root'));
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
 
-  // Register service worker for PWA support
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('SW registered: ', registration);
-        })
-        .catch((registrationError) => {
-          console.log('SW registration failed: ', registrationError);
-        });
-    });
-  }
-  
-  console.log('✅ App rendered successfully!');
-} catch (error) {
-  console.error('❌ Error starting app:', error);
-  document.body.innerHTML = `
-    <div style="padding: 20px; font-family: Arial; background: #ffebee; color: #c62828;">
-      <h1>App Loading Error</h1>
-      <p>There was an error starting the app: ${error.message}</p>
-      <button onclick="window.location.reload()">Reload Page</button>
-    </div>
-  `;
+// Register service worker for PWA support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
 }
