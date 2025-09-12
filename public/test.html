@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basic Test</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Basic Browser Test</h1>
+        <p>Current time: <span id="time"></span></p>
+        <p>If you can see this, the browser is working!</p>
+        
+        <div style="margin-top: 20px;">
+            <h3>Debug Info:</h3>
+            <ul>
+                <li>User Agent: <span id="userAgent"></span></li>
+                <li>Screen Size: <span id="screenSize"></span></li>
+                <li>URL: <span id="currentUrl"></span></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            document.getElementById('time').textContent = new Date().toLocaleString();
+        }
+        
+        // Set debug info
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('screenSize').textContent = screen.width + 'x' + screen.height;
+        document.getElementById('currentUrl').textContent = window.location.href;
+        
+        // Update time every second
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        console.log('Basic test page loaded successfully!');
+    </script>
+</body>
+</html>

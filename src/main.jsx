@@ -4,6 +4,8 @@ import './index.css'
 import App from './App.jsx'
 
 console.log('🚀 Starting React App...');
+console.log('Document ready state:', document.readyState);
+console.log('Root element exists:', !!document.getElementById('root'));
 
 const root = createRoot(document.getElementById('root'));
 root.render(

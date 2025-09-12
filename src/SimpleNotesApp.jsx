@@ -1,6 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { format, parseISO } from 'date-fns';
+import { useAuth } from './AuthContext';
+import { useNotes, useLinkPreview } from './hooks';
+import SimpleAuthModal from './SimpleAuthModal';
 import { 
   Pin, 
   Trash2, 
@@ -28,7 +31,11 @@ import {
   Link,
   Clipboard,
   MoreVertical,
-  Check
+  Check,
+  Tag,
+  Brush,
+  Heart,
+  Activity
 } from 'lucide-react';
 
 // Simple Drawing Canvas Component
@@ -96,6 +103,114 @@ const DrawingCanvas = ({ onDrawingChange }) => {
   );
 };
 
+// URL Detection Utility
+const extractUrls = (text) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.match(urlRegex) || [];
+};
+
+// Link Preview Component
+const LinkPreview = ({ url, getLinkPreview }) => {
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+    
+    const fetchPreview = async () => {
+      if (isCancelled) return;
+      
+      try {
+        setLoading(true);
+        setError(false);
+        
+        // Add a small delay to prevent rapid API calls
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        if (isCancelled) return;
+        
+        const previewData = await getLinkPreview(url);
+        if (isCancelled) return;
+        
+        if (previewData) {
+          setPreview(previewData);
+        } else {
+          setError(true);
+        }
+        
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Link preview error:', error);
+          setError(true);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPreview();
+    
+    return () => {
+      isCancelled = true;
+    };
+  }, [url]); // Remove getLinkPreview from dependencies
+
+  if (loading) {
+    return (
+      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 animate-pulse w-full max-w-full">
+        <div className="flex gap-3">
+          <div className="w-16 h-16 bg-gray-300 rounded flex-shrink-0"></div>
+          <div className="flex-1 min-w-0">
+            <div className="h-4 bg-gray-300 rounded mb-2"></div>
+            <div className="h-3 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !preview) {
+    return (
+      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 w-full max-w-full">
+        <div className="flex items-start gap-2 text-gray-500">
+          <Link className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span className="text-sm break-all overflow-wrap-anywhere">{url}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow w-full max-w-full">
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block">
+        {preview.image && (
+          <img 
+            src={preview.image} 
+            alt={preview.title}
+            className="w-full h-32 object-cover"
+            onError={(e) => e.target.style.display = 'none'}
+          />
+        )}
+        <div className="p-3">
+          <h4 className="font-semibold text-sm text-gray-900 mb-1 break-words">
+            {preview.title}
+          </h4>
+          <p className="text-xs text-gray-600 mb-2 break-words line-clamp-2">
+            {preview.description}
+          </p>
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Link className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{new URL(url).hostname}</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  );
+};
+
 // AI Mood Detection Function
 const detectMoodFromText = (text) => {
   const content = text.toLowerCase();
@@ -154,10 +269,20 @@ const getMoodEmoji = (mood) => {
 };
 
 function SimpleNotesApp() {
-  const [notes, setNotes] = useState([]);
+  const { user, logout } = useAuth();
+  const { 
+    notes, 
+    fetchNotes,
+    createNote, 
+    updateNote, 
+    deleteNote: deleteNoteAPI, 
+    uploadImage
+  } = useNotes();
+  const { getLinkPreview } = useLinkPreview();
+  
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [currentTheme, setCurrentTheme] = useState('cottagecore');
+  const [currentTheme, setCurrentTheme] = useState('lavenderDream');
   const [searchTerm, setSearchTerm] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [selectedColor, setSelectedColor] = useState('');
@@ -191,6 +316,49 @@ function SimpleNotesApp() {
 
   // Theme configurations - Fixed emoji corruptions
   const themes = {
+    lavenderDream: {
+      name: "Lavender Dream",
+      emoji: "💜",
+      background: "bg-white/25 backdrop-blur-md",
+      border: "border-purple-200/60",
+      headerText: "text-purple-900",
+      subText: "text-purple-700",
+      accentText: "text-purple-600",
+      placeholderText: "placeholder-purple-500",
+      brainEmoji: "🧠",
+      decorative: ["💜", "🌸", "✨"],
+      createBg: "bg-purple-50/95",
+      createBorder: "border-purple-200/70",
+      createText: "text-purple-900",
+      createDecor: "💫",
+      editBg: "bg-violet-50/95",
+      editBorder: "border-violet-200/70",
+      editText: "text-violet-900",
+      editDecor: "🌺",
+      buttonGradient: "from-purple-300 to-violet-400",
+      buttonHover: "from-purple-400 to-violet-500",
+      buttonText: "text-purple-900",
+      buttonBorder: "border-purple-300",
+      // Theme selector specific colors
+      selectorGradient: "from-purple-400 to-violet-500",
+      selectorBorder: "border-purple-400",
+      selectorActiveGradient: "from-purple-500 to-violet-600",
+      // Background theme - lavender dream colors
+      appBackground: "bg-gradient-to-br from-purple-50 via-violet-50 to-purple-100",
+      floatingElements: [
+        { emoji: "💜", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-70", delay: "" },
+        { emoji: "🌸", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-80", delay: "delay-300" },
+        { emoji: "✨", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-60", delay: "delay-1000" },
+        { emoji: "💫", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-2000" },
+        { emoji: "🌺", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-65", delay: "delay-500" },
+        { emoji: "🦋", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-70", delay: "delay-1500" },
+        { emoji: "🌙", position: "top-1/4 right-1/4", size: "text-4xl", animation: "animate-bounce", opacity: "opacity-60", delay: "delay-800" },
+        { emoji: "⭐", position: "bottom-1/3 left-1/3", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-1200" },
+        { emoji: "💎", position: "top-3/4 left-10", size: "text-3xl", animation: "animate-bounce", opacity: "opacity-65", delay: "delay-400" },
+        { emoji: "🔮", position: "bottom-1/4 right-1/4", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-70", delay: "delay-1800" }
+      ],
+      overlayGradient: "from-purple-100/25 to-violet-100/30"
+    },
     cottagecore: {
       name: "Cottage Core",
       emoji: "🌻",
@@ -214,6 +382,10 @@ function SimpleNotesApp() {
       buttonHover: "from-amber-400 to-yellow-500",
       buttonText: "text-amber-900",
       buttonBorder: "border-amber-200",
+      // Theme selector specific colors
+      selectorGradient: "from-yellow-400 to-amber-500",
+      selectorBorder: "border-amber-400",
+      selectorActiveGradient: "from-yellow-500 to-amber-600",
       // Background theme
       appBackground: "bg-gradient-to-br from-amber-50 via-green-50 to-yellow-100",
       floatingElements: [
@@ -249,6 +421,10 @@ function SimpleNotesApp() {
       buttonHover: "from-pink-400 to-rose-500",
       buttonText: "text-pink-900",
       buttonBorder: "border-pink-200",
+      // Theme selector specific colors
+      selectorGradient: "from-pink-400 to-rose-500",
+      selectorBorder: "border-pink-400",
+      selectorActiveGradient: "from-pink-500 to-rose-600",
       // Background theme - soft pink colors
       appBackground: "bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100",
       floatingElements: [
@@ -284,6 +460,10 @@ function SimpleNotesApp() {
       buttonHover: "from-blue-400 to-teal-500",
       buttonText: "text-blue-900",
       buttonBorder: "border-blue-200",
+      // Theme selector specific colors
+      selectorGradient: "from-blue-400 to-teal-500",
+      selectorBorder: "border-blue-400",
+      selectorActiveGradient: "from-blue-500 to-teal-600",
       // Background theme - ocean colors
       appBackground: "bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-100",
       floatingElements: [
@@ -319,6 +499,10 @@ function SimpleNotesApp() {
       buttonHover: "from-orange-400 to-red-500",
       buttonText: "text-orange-900",
       buttonBorder: "border-orange-200",
+      // Theme selector specific colors
+      selectorGradient: "from-orange-400 to-red-500",
+      selectorBorder: "border-orange-400",
+      selectorActiveGradient: "from-orange-500 to-red-600",
       // Background theme - sunset colors
       appBackground: "bg-gradient-to-br from-orange-100 via-red-50 to-yellow-100",
       floatingElements: [
@@ -354,6 +538,10 @@ function SimpleNotesApp() {
       buttonHover: "from-green-500 to-emerald-600",
       buttonText: "text-green-900",
       buttonBorder: "border-green-300",
+      // Theme selector specific colors
+      selectorGradient: "from-green-400 to-emerald-500",
+      selectorBorder: "border-green-400",
+      selectorActiveGradient: "from-green-500 to-emerald-600",
       // Background theme - forest colors
       appBackground: "bg-gradient-to-br from-green-100 via-emerald-50 to-lime-100",
       floatingElements: [
@@ -389,6 +577,10 @@ function SimpleNotesApp() {
       buttonHover: "from-amber-600 to-stone-700",
       buttonText: "text-amber-100",
       buttonBorder: "border-amber-600",
+      // Theme selector specific colors
+      selectorGradient: "from-amber-600 to-stone-700",
+      selectorBorder: "border-amber-600",
+      selectorActiveGradient: "from-amber-700 to-stone-800",
       // Background theme - darker academic colors for true dark academia feel
       appBackground: "bg-gradient-to-br from-stone-950 via-amber-950 to-stone-900",
       floatingElements: [
@@ -424,6 +616,10 @@ function SimpleNotesApp() {
       buttonHover: "from-slate-500 to-slate-600",
       buttonText: "text-slate-100",
       buttonBorder: "border-slate-500",
+      // Theme selector specific colors
+      selectorGradient: "from-slate-500 to-gray-600",
+      selectorBorder: "border-slate-500",
+      selectorActiveGradient: "from-slate-600 to-gray-700",
       // Background theme - dark midnight colors
       appBackground: "bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800",
       floatingElements: [
@@ -439,6 +635,55 @@ function SimpleNotesApp() {
   };
 
   const theme = themes[currentTheme];
+
+  // Fetch notes when user is authenticated
+  useEffect(() => {
+    if (user) {
+      console.log('User authenticated, fetching notes...');
+      fetchNotes();
+    }
+  }, [user, fetchNotes]);
+
+  // Reminder functions
+  const scheduleReminder = useCallback((noteId, reminderDate) => {
+    const now = new Date();
+    const reminderTime = new Date(reminderDate);
+    
+    if (reminderTime > now) {
+      const timeout = reminderTime.getTime() - now.getTime();
+      setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          const note = notes.find(n => n.id === noteId);
+          new Notification('Note Reminder', {
+            body: `Reminder: ${note?.title || 'Untitled Note'}`,
+            icon: '/favicon.ico'
+          });
+        }
+      }, timeout);
+    }
+  }, [notes]);
+
+  // Schedule reminders for existing notes
+  useEffect(() => {
+    if (notes && notes.length > 0) {
+      notes.forEach(note => {
+        if (note.reminder_time) {
+          scheduleReminder(note.id, note.reminder_time);
+        }
+      });
+    }
+  }, [notes, scheduleReminder]);
+
+  // Show auth modal if not logged in
+  if (!user) {
+    return <SimpleAuthModal />;
+  }
+
+  // Modified setNotes to work with API  
+  const setNotes = (_newNotes) => {
+    // Drag and drop is temporarily disabled when using API
+    // Will implement server-side reordering in future updates
+  };
 
   // Color options for notes
   const colorOptions = [
@@ -532,24 +777,7 @@ function SimpleNotesApp() {
     setIsRecording(false);
   };
 
-  // Reminder functions
-  const scheduleReminder = (noteId, reminderDate) => {
-    const now = new Date();
-    const reminderTime = new Date(reminderDate);
-    
-    if (reminderTime > now) {
-      const timeout = reminderTime.getTime() - now.getTime();
-      setTimeout(() => {
-        if (Notification.permission === 'granted') {
-          const note = notes.find(n => n.id === noteId);
-          new Notification('Note Reminder', {
-            body: `Reminder: ${note?.title || 'Untitled Note'}`,
-            icon: '/favicon.ico'
-          });
-        }
-      }, timeout);
-    }
-  };
+
 
   const _requestNotificationPermission = () => {
     if ('Notification' in window) {
@@ -597,12 +825,12 @@ function SimpleNotesApp() {
                           note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           note.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      const matchesMood = !searchFilters.mood || note.mood === searchFilters.mood;
+      const matchesMood = !searchFilters.mood || note.detected_mood === searchFilters.mood;
       const matchesColor = !searchFilters.color || note.color === searchFilters.color;
-      const matchesReminder = !searchFilters.hasReminder || note.reminder;
+      const matchesReminder = !searchFilters.hasReminder || note.reminder_time;
       const matchesAudio = !searchFilters.hasAudio || note.audioUrl;
-      const matchesImage = !searchFilters.hasImage || note.imageUrl;
-      const matchesArchived = showArchived ? note.isArchived : !note.isArchived;
+      const matchesImage = !searchFilters.hasImage || note.image_url;
+      const matchesArchived = showArchived ? note.is_archived : !note.is_archived;
 
       return matchesSearch && matchesMood && matchesColor && matchesReminder && 
              matchesAudio && matchesImage && matchesArchived;
@@ -616,21 +844,21 @@ function SimpleNotesApp() {
         case 'mood':
           return (a.mood || '').localeCompare(b.mood || '');
         case 'modified':
-          return new Date(b.lastModified || b.date) - new Date(a.lastModified || a.date);
+          return new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
         default: // 'date'
           return new Date(b.date) - new Date(a.date);
       }
     });
 
     // Separate pinned notes
-    const pinned = filtered.filter(note => note.isPinned);
-    const unpinned = filtered.filter(note => !note.isPinned);
+    const pinned = filtered.filter(note => note.is_pinned);
+    const unpinned = filtered.filter(note => !note.is_pinned);
     
     return [...pinned, ...unpinned];
   };
 
   // Add/Edit note
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (title.trim() || content.trim()) {
       let mood = null;
@@ -644,49 +872,42 @@ function SimpleNotesApp() {
 
       const noteData = {
         title: title.trim() || 'Untitled',
-        content: content.trim(),
-        mood,
-        confidence,
-        date: new Date().toLocaleDateString(),
-        lastModified: new Date().toISOString(),
-        isPinned: false,
-        isArchived: false,
+        content: noteType === 'drawing' ? '' : content.trim(),
+        drawing_data: noteType === 'drawing' ? content.trim() : null,
+        detected_mood: mood,
+        mood_confidence: confidence,
+        is_pinned: false,
+        is_archived: false,
         color: selectedColor,
         labels: [...selectedLabels],
-        enableMoodDetection,
-        imageUrl: imagePreview,
-        linkUrl: linkUrl.trim(),
-        linkText: linkText.trim() || linkUrl.trim(),
-        // New features data
-        noteType,
-        checklistItems: noteType === 'checklist' ? [...checklistItems] : [],
-        reminder: reminder || null,
+        image_url: imagePreview,
+        link_url: linkUrl.trim(),
+        link_text: linkText.trim() || linkUrl.trim(),
+        note_type: noteType,
+        checklist_items: noteType === 'checklist' ? [...checklistItems] : [],
+        reminder_time: reminder || null,
         audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : null,
         version: 1,
         history: []
       };
 
-      if (editingNote) {
-        setNotes(notes.map(note => 
-          note.id === editingNote.id 
-            ? { ...note, ...noteData }
-            : note
-        ));
-        setEditingNote(null);
-        setShowCreateForm(false);
-      } else {
-        const newNote = {
-          ...noteData,
-          id: Date.now()
-        };
-        setNotes([...notes, newNote]);
-        
-        // Schedule reminder if set
-        if (reminder) {
-          scheduleReminder(newNote.id, reminder);
+      try {
+        if (editingNote) {
+          await updateNote(editingNote.id, noteData);
+          setEditingNote(null);
+          setShowCreateForm(false);
+        } else {
+          const newNote = await createNote(noteData);
+          
+          // Schedule reminder if set
+          if (reminder) {
+            scheduleReminder(newNote.id, reminder);
+          }
+          
+          setShowCreateForm(false);
         }
-        
-        setShowCreateForm(false);
+      } catch (error) {
+        console.error('Error saving note:', error);
       }
       
       setTitle('');
@@ -709,13 +930,21 @@ function SimpleNotesApp() {
     setEditingNote(note);
     setShowCreateForm(true);
     setTitle(note.title);
-    setContent(note.content);
+    // Load content based on note type
+    if (note.note_type === 'drawing') {
+      setContent(note.drawing_data || '');
+    } else {
+      setContent(note.content || '');
+    }
     setSelectedColor(note.color || '');
     setSelectedLabels(note.labels || []);
-    setEnableMoodDetection(note.enableMoodDetection || false);
-    setImagePreview(note.imageUrl || '');
-    setLinkUrl(note.linkUrl || '');
-    setLinkText(note.linkText || '');
+    setEnableMoodDetection(note.detected_mood ? true : false);
+    setImagePreview(note.image_url || '');
+    setLinkUrl(note.link_url || '');
+    setLinkText(note.link_text || '');
+    setChecklistItems(note.checklist_items || []);
+    setNoteType(note.note_type || 'text');
+    setReminder(note.reminder_time || '');
   };
 
   const _cancelEdit = () => {
@@ -726,31 +955,49 @@ function SimpleNotesApp() {
     setSelectedColor('');
     setSelectedLabels([]);
     setImageFile(null);
+    setChecklistItems([]);
+    setNoteType('text');
     setImagePreview('');
     setLinkUrl('');
     setLinkText('');
   };
 
-  const deleteNote = (id) => {
-    setNotes(notes.filter(note => note.id !== id));
+  const deleteNote = async (id) => {
+    try {
+      await deleteNoteAPI(id);
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
   };
 
-  const togglePin = (id) => {
-    setNotes(notes.map(note => 
-      note.id === id ? { ...note, isPinned: !note.isPinned } : note
-    ));
+  const togglePin = async (id) => {
+    try {
+      const note = notes.find(n => n.id === id);
+      if (note) {
+        await updateNote(id, { is_pinned: !note.is_pinned });
+      }
+    } catch (error) {
+      console.error('Error toggling pin:', error);
+    }
   };
 
-  const toggleArchive = (id) => {
-    setNotes(notes.map(note => 
-      note.id === id ? { ...note, isArchived: !note.isArchived } : note
-    ));
+  const toggleArchive = async (id) => {
+    try {
+      const note = notes.find(n => n.id === id);
+      if (note) {
+        await updateNote(id, { is_archived: !note.is_archived });
+      }
+    } catch (error) {
+      console.error('Error toggling archive:', error);
+    }
   };
 
-  const updateNoteColor = (id, color) => {
-    setNotes(notes.map(note => 
-      note.id === id ? { ...note, color } : note
-    ));
+  const updateNoteColor = async (id, color) => {
+    try {
+      await updateNote(id, { color });
+    } catch (error) {
+      console.error('Error updating note color:', error);
+    }
   };
 
   // Add label functionality
@@ -763,6 +1010,15 @@ function SimpleNotesApp() {
 
   const removeLabel = (labelToRemove) => {
     setSelectedLabels(selectedLabels.filter(label => label !== labelToRemove));
+  };
+
+  const addLink = () => {
+    if (linkUrl.trim()) {
+      const linkMarkdown = `[${linkText.trim() || linkUrl.trim()}](${linkUrl.trim()})`;
+      setContent(prev => prev + (prev ? '\n' : '') + linkMarkdown);
+      setLinkUrl('');
+      setLinkText('');
+    }
   };
 
 
@@ -806,91 +1062,166 @@ function SimpleNotesApp() {
         </div>
       ))}
       
-      <div className="max-w-4xl mx-auto relative z-20">
-        
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className={`text-3xl font-bold ${theme.headerText} mb-2 font-cedarville fade-in-up`}>
-            My Notes
-          </h1>
-          <p className={`${theme.subText} text-sm slide-in-right`}>
-            Your moodboard for life’s notes
-          </p>
-          
-          {/* Theme Selector */}
-          <div className="flex gap-1 justify-center mt-4 flex-wrap">
-            {Object.entries(themes).map(([key, themeData]) => (
+      {/* Modern Navigation Bar */}
+      <nav className={`${theme.background} ${theme.border} border-b backdrop-blur-lg sticky top-0 z-30 mb-8`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            
+            {/* Brand Section */}
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-xl bg-gradient-to-br ${theme.buttonGradient} shadow-lg`}>
+                <FileText className={`w-6 h-6 ${theme.buttonText}`} />
+              </div>
+              <div className="flex flex-col">
+                <h1 className={`text-2xl font-bold ${theme.headerText} font-cedarville leading-tight`}>
+                  My Notes
+                </h1>
+                <p className={`${theme.subText} text-xs hidden sm:block`}>
+                  Choose the vibe, save the thought!
+                </p>
+              </div>
+            </div>
+
+            {/* Center Section - Mobile tagline */}
+            <div className="flex-1 text-center sm:hidden">
+              <p className={`${theme.subText} text-xs`}>
+                Choose the vibe, save the thought!
+              </p>
+            </div>
+
+            {/* User Section */}
+            <div className="flex items-center space-x-4">
+              {/* User Info */}
+              <div className={`hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl ${theme.background} ${theme.border} border shadow-sm`}>
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.buttonGradient} flex items-center justify-center`}>
+                  <span className={`text-sm font-semibold ${theme.buttonText}`}>
+                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className={`text-sm font-medium ${theme.headerText}`}>
+                    {user?.username || 'User'}
+                  </span>
+                  <span className={`text-xs ${theme.subText}`}>
+                    Welcome back!
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile User Initial */}
+              <div className={`sm:hidden w-8 h-8 rounded-full bg-gradient-to-br ${theme.buttonGradient} flex items-center justify-center`}>
+                <span className={`text-sm font-semibold ${theme.buttonText}`}>
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+
+              {/* Logout Button */}
               <button
-                key={key}
-                onClick={() => handleThemeChange(key)}
-                className={`px-2 py-1 text-xs rounded-full border transition-all duration-200 transform hover:scale-105 ${
-                  currentTheme === key 
-                    ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-md` 
-                    : `bg-white/50 ${theme.accentText} border-gray-300 hover:${theme.buttonHover} hover:bg-gradient-to-r hover:${theme.buttonText}`
-                }`}
+                onClick={logout}
+                className={`px-4 py-2 text-sm font-medium rounded-xl border transition-all duration-200 hover:scale-105 hover:shadow-md ${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-sm`}
               >
-                {themeData.emoji} {themeData.name}
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">👋</span>
               </button>
-            ))}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-4xl mx-auto relative z-20">
+
+        {/* Floating Theme Selector */}
+        <div className="fixed top-20 right-4 z-40">
+          <div className={`${theme.background} ${theme.border} border rounded-2xl p-3 backdrop-blur-lg shadow-xl transform transition-all duration-300 hover:scale-105`}>
+            <div className="flex items-center gap-2 mb-3">
+              <Palette className={`w-4 h-4 ${theme.accentText}`} />
+              <span className={`text-xs font-medium ${theme.headerText}`}>Themes</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 max-w-[120px]">
+              {Object.entries(themes).map(([key, themeData]) => (
+                <button
+                  key={key}
+                  onClick={() => handleThemeChange(key)}
+                  className={`relative group flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-300 hover:scale-110 hover:shadow-lg ${
+                    currentTheme === key 
+                      ? `bg-gradient-to-br ${themeData.selectorActiveGradient} border-white shadow-lg ring-2 ring-white/50 text-white` 
+                      : `bg-gradient-to-br ${themeData.selectorGradient} ${themeData.selectorBorder} hover:shadow-md text-white/90 hover:text-white`
+                  }`}
+                  title={themeData.name}
+                >
+                  <div className={`text-lg transition-transform group-hover:scale-125 ${currentTheme === key ? 'animate-bounce' : ''}`}>
+                    {themeData.emoji}
+                  </div>
+                  {currentTheme === key && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
+                      <Check className="w-2 h-2 text-gray-800" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Search and Controls */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            placeholder="Search notes, labels..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`flex-1 px-4 py-2 border rounded-lg ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-blue-300`}
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowArchived(!showArchived)}
-              className={`px-4 py-2 rounded-lg border transition-all flex items-center gap-2 ${
-                showArchived 
-                  ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder}` 
-                  : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-50`
-              }`}
-            >
-              {showArchived ? (
-                <>
-                  <Clipboard className="w-4 h-4" />
-                  All Notes
-                </>
-              ) : (
-                <>
-                  <Archive className="w-4 h-4" />
-                  Archived
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className={`px-4 py-2 rounded-lg border bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-50 transition-all`}
-            >
-              {viewMode === 'grid' ? '☰ List' : '⊞ Grid'}
-            </button>
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className={`px-4 py-2 rounded-lg border transition-all flex items-center gap-2 ${
-                showCreateForm || editingNote
-                  ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder}` 
-                  : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-50`
-              }`}
-            >
-              {showCreateForm || editingNote ? (
-                <>
-                  <X className="w-4 h-4" />
-                  Close
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  New Note
-                </>
-              )}
-            </button>
+        <div className="mb-6 space-y-4">
+          {/* Main Controls Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="Search notes, labels..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`flex-1 px-4 py-3 border rounded-xl ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all`}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                className={`px-4 py-3 rounded-xl border transition-all flex items-center gap-2 hover:scale-105 ${
+                  showArchived 
+                    ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-md` 
+                    : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100 hover:shadow-md`
+                }`}
+              >
+                {showArchived ? (
+                  <>
+                    <Clipboard className="w-4 h-4" />
+                    All Notes
+                  </>
+                ) : (
+                  <>
+                    <Archive className="w-4 h-4" />
+                    Archived
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                className={`px-4 py-3 rounded-xl border bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100 hover:shadow-md transition-all hover:scale-105`}
+              >
+                {viewMode === 'grid' ? '☰ List' : '⊞ Grid'}
+              </button>
+              <button
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className={`px-4 py-3 rounded-xl border transition-all flex items-center gap-2 hover:scale-105 ${
+                  showCreateForm || editingNote
+                    ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-md` 
+                    : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100 hover:shadow-md`
+                }`}
+              >
+                {showCreateForm || editingNote ? (
+                  <>
+                    <X className="w-4 h-4" />
+                    Close
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    New Note
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1066,7 +1397,7 @@ function SimpleNotesApp() {
                 className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${noteType === 'drawing' ? 'bg-blue-100 text-blue-600' : 'text-gray-500'}`}
                 title="Drawing"
               >
-                <Palette className="w-5 h-5" />
+                <Brush className="w-5 h-5" />
               </button>
               
               {/* Voice Recording */}
@@ -1091,21 +1422,35 @@ function SimpleNotesApp() {
               </label>
               
               {/* Reminder */}
-              <div className="relative">
+              <div className="relative group">
                 <button
                   type="button"
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'datetime-local';
-                    input.value = reminder;
-                    input.onchange = (e) => setReminder(e.target.value);
-                    input.click();
-                  }}
                   className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${reminder ? 'bg-yellow-100 text-yellow-600' : 'text-gray-500'}`}
-                  title="Add reminder"
+                  title="Set reminder"
                 >
                   <Clock className="w-5 h-5" />
                 </button>
+                <div className={`absolute bottom-12 left-0 hidden group-hover:flex ${theme.createBg} border rounded-lg shadow-lg p-3 z-10 min-w-[200px]`}>
+                  <div className="flex flex-col gap-2">
+                    <label className={`text-xs ${theme.subText}`}>Set reminder:</label>
+                    <input
+                      type="datetime-local"
+                      value={reminder}
+                      onChange={(e) => setReminder(e.target.value)}
+                      className={`p-2 rounded border ${theme.inputBg} ${theme.text} text-sm`}
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    {reminder && (
+                      <button
+                        type="button"
+                        onClick={() => setReminder('')}
+                        className="text-xs text-red-500 hover:text-red-700 self-start"
+                      >
+                        Clear reminder
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
               
               {/* Color Palette */}
@@ -1131,52 +1476,77 @@ function SimpleNotesApp() {
                 </div>
               </div>
               
-              {/* More Options */}
+              {/* Mood Detection */}
+              <button
+                type="button"
+                onClick={() => setEnableMoodDetection(!enableMoodDetection)}
+                className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${enableMoodDetection ? 'bg-red-100 text-red-600' : 'text-gray-500'}`}
+                title={enableMoodDetection ? 'Disable mood detection' : 'Enable mood detection'}
+              >
+                {enableMoodDetection ? (
+                  <Heart className="w-5 h-5 fill-current" />
+                ) : (
+                  <Activity className="w-5 h-5" />
+                )}
+              </button>
+              
+              {/* Add Label */}
               <div className="relative group">
                 <button
                   type="button"
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
-                  title="More options"
+                  className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${selectedLabels.length > 0 ? 'bg-green-100 text-green-600' : 'text-gray-500'}`}
+                  title="Add label"
                 >
-                  <MoreVertical className="w-5 h-5" />
+                  <Tag className="w-5 h-5" />
                 </button>
                 <div className={`absolute bottom-12 left-0 hidden group-hover:block ${theme.createBg} border rounded-lg shadow-lg py-2 z-10 min-w-48`}>
-                  <div className="px-3 py-1">
+                  <div className="px-3 py-2">
                     <input
                       type="text"
                       placeholder="Add label..."
                       value={labelText}
                       onChange={(e) => setLabelText(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLabel())}
-                      className={`w-full text-sm border-0 outline-none ${theme.createBg} ${theme.createText} themed-placeholder`}
+                      className={`w-full text-sm border rounded px-2 py-1 ${theme.createBg} ${theme.createText} themed-placeholder focus:outline-none focus:ring-1 focus:ring-blue-400`}
                     />
                   </div>
-                  <div className="px-3 py-1">
+                </div>
+              </div>
+              
+              {/* Add Link */}
+              <div className="relative group">
+                <button
+                  type="button"
+                  className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${linkUrl || linkText ? 'bg-blue-100 text-blue-600' : 'text-gray-500'}`}
+                  title="Add link"
+                >
+                  <Link className="w-5 h-5" />
+                </button>
+                <div className={`absolute bottom-12 left-0 hidden group-hover:block ${theme.createBg} border rounded-lg shadow-lg py-2 z-10 min-w-56`}>
+                  <div className="px-3 py-2 space-y-2">
                     <input
                       type="url"
-                      placeholder="Add link..."
+                      placeholder="Paste or type URL..."
                       value={linkUrl}
                       onChange={(e) => setLinkUrl(e.target.value)}
-                      className={`w-full text-sm border-0 outline-none mb-1 ${theme.createBg} ${theme.createText} themed-placeholder`}
+                      className={`w-full text-sm border rounded px-2 py-1 ${theme.createBg} ${theme.createText} themed-placeholder focus:outline-none focus:ring-1 focus:ring-blue-400`}
                     />
                     <input
                       type="text"
-                      placeholder="Link text..."
+                      placeholder="Link text (optional)..."
                       value={linkText}
                       onChange={(e) => setLinkText(e.target.value)}
-                      className={`w-full text-sm border-0 outline-none ${theme.createBg} ${theme.createText} themed-placeholder`}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLink())}
+                      className={`w-full text-sm border rounded px-2 py-1 ${theme.createBg} ${theme.createText} themed-placeholder focus:outline-none focus:ring-1 focus:ring-blue-400`}
                     />
-                  </div>
-                  <div className="px-3 py-1">
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={enableMoodDetection}
-                        onChange={(e) => setEnableMoodDetection(e.target.checked)}
-                        className="w-4 h-4"
-                      />
-                      Mood detection
-                    </label>
+                    <button
+                      type="button"
+                      onClick={addLink}
+                      disabled={!linkUrl.trim()}
+                      className={`w-full text-xs py-1 px-2 rounded ${linkUrl.trim() ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} transition-colors`}
+                    >
+                      Add Link
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1208,64 +1578,64 @@ function SimpleNotesApp() {
         </>
         )}
 
-        {/* Advanced Search and Sort Controls */}
-        <div className="mb-4 p-3 bg-white/50 rounded-lg border">
-          <div className="flex flex-wrap gap-3 items-center">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className={`px-3 py-1 border rounded ${theme.background} ${theme.border} ${theme.subText} text-sm`}
-            >
-              <option value="date">Sort by Date</option>
-              <option value="title">Sort by Title</option>
-              <option value="mood">Sort by Mood</option>
-              <option value="modified">Sort by Modified</option>
-            </select>
-            
-            <select
-              value={searchFilters.mood}
-              onChange={(e) => setSearchFilters({...searchFilters, mood: e.target.value})}
-              className={`px-3 py-1 border rounded ${theme.background} ${theme.border} ${theme.subText} text-sm`}
-            >
-              <option value="">All Moods</option>
-              <option value="happy">😊 Happy</option>
-              <option value="sad">😢 Sad</option>
-              <option value="angry">😠 Angry</option>
-              <option value="excited">🎉 Excited</option>
-              <option value="calm">🧘 Calm</option>
-            </select>
+          {/* Advanced Search and Sort Controls */}
+          <div className={`p-4 ${theme.background} ${theme.border} border rounded-xl backdrop-blur-sm shadow-sm`}>
+            <div className="flex flex-wrap gap-3 items-center">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className={`px-4 py-2 border rounded-xl ${theme.background} ${theme.border} ${theme.subText} text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all hover:shadow-sm`}
+              >
+                <option value="date">Sort by Date</option>
+                <option value="title">Sort by Title</option>
+                <option value="mood">Sort by Mood</option>
+                <option value="modified">Sort by Modified</option>
+              </select>
+              
+              <select
+                value={searchFilters.mood}
+                onChange={(e) => setSearchFilters({...searchFilters, mood: e.target.value})}
+                className={`px-4 py-2 border rounded-xl ${theme.background} ${theme.border} ${theme.subText} text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all hover:shadow-sm`}
+              >
+                <option value="">All Moods</option>
+                <option value="happy">😊 Happy</option>
+                <option value="sad">😢 Sad</option>
+                <option value="angry">😠 Angry</option>
+                <option value="excited">🎉 Excited</option>
+                <option value="calm">🧘 Calm</option>
+              </select>
 
-            <label className={`flex items-center gap-1 ${theme.subText} text-sm`}>
-              <input
-                type="checkbox"
-                checked={searchFilters.hasReminder}
-                onChange={(e) => setSearchFilters({...searchFilters, hasReminder: e.target.checked})}
-                className="w-4 h-4"
-              />
-              Has Reminder
-            </label>
+              <label className={`flex items-center gap-2 ${theme.subText} text-sm px-4 py-2 rounded-xl border ${theme.border} bg-white/60 hover:bg-white/80 transition-all cursor-pointer hover:scale-105 hover:shadow-sm`}>
+                <input
+                  type="checkbox"
+                  checked={searchFilters.hasReminder}
+                  onChange={(e) => setSearchFilters({...searchFilters, hasReminder: e.target.checked})}
+                  className="w-4 h-4 rounded text-purple-500 focus:ring-purple-300"
+                />
+                Has Reminder
+              </label>
 
-            <label className={`flex items-center gap-1 ${theme.subText} text-sm`}>
-              <input
-                type="checkbox"
-                checked={searchFilters.hasImage}
-                onChange={(e) => setSearchFilters({...searchFilters, hasImage: e.target.checked})}
-                className="w-4 h-4"
-              />
-              Has Image
-            </label>
+              <label className={`flex items-center gap-2 ${theme.subText} text-sm px-4 py-2 rounded-xl border ${theme.border} bg-white/60 hover:bg-white/80 transition-all cursor-pointer hover:scale-105 hover:shadow-sm`}>
+                <input
+                  type="checkbox"
+                  checked={searchFilters.hasImage}
+                  onChange={(e) => setSearchFilters({...searchFilters, hasImage: e.target.checked})}
+                  className="w-4 h-4 rounded text-purple-500 focus:ring-purple-300"
+                />
+                Has Image
+              </label>
 
-            <label className={`flex items-center gap-1 ${theme.subText} text-sm`}>
-              <input
-                type="checkbox"
-                checked={searchFilters.hasAudio}
-                onChange={(e) => setSearchFilters({...searchFilters, hasAudio: e.target.checked})}
-                className="w-4 h-4"
-              />
-              Has Audio
-            </label>
+              <label className={`flex items-center gap-2 ${theme.subText} text-sm px-4 py-2 rounded-xl border ${theme.border} bg-white/60 hover:bg-white/80 transition-all cursor-pointer hover:scale-105 hover:shadow-sm`}>
+                <input
+                  type="checkbox"
+                  checked={searchFilters.hasAudio}
+                  onChange={(e) => setSearchFilters({...searchFilters, hasAudio: e.target.checked})}
+                  className="w-4 h-4 rounded text-purple-500 focus:ring-purple-300"
+                />
+                Has Audio
+              </label>
+            </div>
           </div>
-        </div>
 
         {/* Notes Display with Drag and Drop */}
         <DragDropContext onDragEnd={onDragEnd}>
@@ -1291,28 +1661,28 @@ function SimpleNotesApp() {
                         tabIndex={0}
                       >
               {/* Pin indicator */}
-              {note.isPinned && (
+              {note.is_pinned && (
                 <div className="absolute top-2 right-2">
                   <Pin className="w-4 h-4 text-yellow-500 fill-current" />
                 </div>
               )}
 
               {/* Note content */}
-              <div className="pr-8">
+              <div className="pr-8 w-full overflow-hidden">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className={`font-semibold ${theme.headerText} font-cedarville text-lg flex-1`}>
+                  <h3 className={`font-semibold ${theme.headerText} font-cedarville text-lg flex-1 break-words`}>
                     {note.title}
                   </h3>
                 </div>
-                {note.noteType && (
+                {note.note_type && (
                   <div className="mb-2">
                     <span className={`inline-flex items-center gap-1 text-xs ${theme.background} ${theme.border} px-2 py-1 rounded-full border`}>
-                      {note.noteType === 'checklist' ? 
+                      {note.note_type === 'checklist' ? 
                         <>
                           <CheckSquare className="w-3 h-3" /> 
                           Checklist
                         </> : 
-                        note.noteType === 'drawing' ?
+                        note.note_type === 'drawing' ?
                         <>
                           <Palette className="w-3 h-3" /> 
                           Drawing
@@ -1327,17 +1697,25 @@ function SimpleNotesApp() {
                 )}
 
                 {/* Text Content */}
-                {note.noteType === 'text' && note.content && (
-                  <p className={`${theme.subText} text-sm mb-2 whitespace-pre-wrap`}>
-                    {note.content}
-                  </p>
+                {note.note_type === 'text' && note.content && (
+                  <div className="mb-2 w-full overflow-hidden">
+                    <p className={`${theme.subText} text-sm mb-2 whitespace-pre-wrap break-words overflow-wrap-anywhere`}>
+                      {note.content}
+                    </p>
+                    {/* Link Previews */}
+                    {extractUrls(note.content).map((url, index) => (
+                      <div key={index} className="mt-3 w-full">
+                        <LinkPreview url={url} getLinkPreview={getLinkPreview} />
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {/* Drawing Content */}
-                {note.noteType === 'drawing' && note.content && (
+                {note.note_type === 'drawing' && note.drawing_data && (
                   <div className="mb-2">
                     <img 
-                      src={note.content} 
+                      src={note.drawing_data} 
                       alt="Drawing" 
                       className="max-w-full h-auto rounded border"
                     />
@@ -1345,24 +1723,25 @@ function SimpleNotesApp() {
                 )}
 
                 {/* Checklist Content */}
-                {note.noteType === 'checklist' && note.checklistItems && note.checklistItems.length > 0 && (
+                {note.note_type === 'checklist' && note.checklist_items && note.checklist_items.length > 0 && (
                   <div className="mb-2">
-                    {note.checklistItems.map((item, index) => (
+                    {note.checklist_items.map((item, index) => (
                       <div key={index} className="flex items-center gap-2 mb-1">
                         <input
                           type="checkbox"
                           checked={item.completed}
-                          onChange={() => {
-                            setNotes(notes.map(n => 
-                              n.id === note.id 
-                                ? {
-                                    ...n, 
-                                    checklistItems: n.checklistItems.map((ci, i) => 
-                                      i === index ? { ...ci, completed: !ci.completed } : ci
-                                    )
-                                  }
-                                : n
-                            ));
+                          onChange={async () => {
+                            try {
+                              console.log('Updating checklist item:', index, 'for note:', note.id);
+                              const updatedChecklistItems = note.checklist_items.map((ci, i) => 
+                                i === index ? { ...ci, completed: !ci.completed } : ci
+                              );
+                              console.log('Updated checklist items:', updatedChecklistItems);
+                              await updateNote(note.id, { checklist_items: updatedChecklistItems });
+                              console.log('Checklist update successful');
+                            } catch (error) {
+                              console.error('Error updating checklist:', error);
+                            }
                           }}
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                         />
@@ -1375,10 +1754,10 @@ function SimpleNotesApp() {
                 )}
 
                 {/* Reminder Display */}
-                {note.reminder && (
+                {note.reminder_time && (
                   <div className={`flex items-center gap-1 mb-2 text-xs ${theme.accentText}`}>
                     <span>⏰</span>
-                    <span>{format(parseISO(note.reminder), 'MMM dd, yyyy HH:mm')}</span>
+                    <span>{format(parseISO(note.reminder_time), 'MMM dd, yyyy HH:mm')}</span>
                   </div>
                 )}
 
@@ -1390,10 +1769,10 @@ function SimpleNotesApp() {
                 )}
 
                 {/* Image display */}
-                {note.imageUrl && (
+                {note.image_url && (
                   <div className="mb-2">
                     <img 
-                      src={note.imageUrl} 
+                      src={note.image_url} 
                       alt="Note attachment" 
                       className="max-w-full h-auto rounded-lg shadow-sm max-h-48 object-cover"
                       onError={(e) => {
@@ -1430,17 +1809,17 @@ function SimpleNotesApp() {
                 )}
 
                 {/* Mood display */}
-                {note.mood && note.enableMoodDetection && (
+                {note.detected_mood && (
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{getMoodEmoji(note.mood)}</span>
+                    <span className="text-lg">{getMoodEmoji(note.detected_mood)}</span>
                     <span className={`text-xs ${theme.accentText} capitalize`}>
-                      {note.mood} ({Math.round(note.confidence * 100)}%)
+                      {note.detected_mood} ({Math.round((note.mood_confidence || 0) * 100)}%)
                     </span>
                   </div>
                 )}
 
                 <div className={`text-xs ${theme.accentText} flex justify-between items-center`}>
-                  <span>{note.date}</span>
+                  <span>{note.created_at ? new Date(note.created_at).toLocaleDateString() : ''}</span>
                 </div>
               </div>
 
@@ -1449,8 +1828,8 @@ function SimpleNotesApp() {
                 <div className="flex gap-1">
                   <button
                     onClick={() => togglePin(note.id)}
-                    className={`p-1 rounded text-xs hover:bg-white/50 transition-all ${note.isPinned ? 'text-yellow-600' : 'text-gray-600'}`}
-                    title={note.isPinned ? 'Unpin' : 'Pin'}
+                    className={`p-1 rounded text-xs hover:bg-white/50 transition-all ${note.is_pinned ? 'text-yellow-600' : 'text-gray-600'}`}
+                    title={note.is_pinned ? 'Unpin' : 'Pin'}
                   >
                     <Pin className="w-4 h-4" />
                   </button>
@@ -1483,9 +1862,9 @@ function SimpleNotesApp() {
                   <button
                     onClick={() => toggleArchive(note.id)}
                     className="p-1 rounded text-xs text-gray-600 hover:bg-white/50 transition-all"
-                    title={note.isArchived ? 'Unarchive' : 'Archive'}
+                    title={note.is_archived ? 'Unarchive' : 'Archive'}
                   >
-                    {note.isArchived ? (
+                    {note.is_archived ? (
                       <ArchiveRestore className="w-4 h-4" />
                     ) : (
                       <Archive className="w-4 h-4" />
