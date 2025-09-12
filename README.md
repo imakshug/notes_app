@@ -1,39 +1,35 @@
-# AI Notes App
+# Notes App
 
-A React-based notes application with AI mood detection and multiple themes.
-![alt text](<Screenshot 2025-09-10 223359.png>)
-## Features
+React notes application with themes and glassmorphism UI.
 
-- **AI Mood Detection**: Analyzes note content to detect emotions
-- **7 Themes**: Cottage Core, Dark Academia, Midnight, Sakura Blossom, Ocean Breeze, Sunset Glow, Forest Green
-- **Note Management**: Create, edit, pin, archive, and color-code notes
-- **Search & Labels**: Find notes by content, title, or custom labels
-- **Responsive Design**: Works on desktop, tablet, and mobile
+## Technical Features
 
-## Quick Start
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/ai-notes-app.git
-cd ai-notes-app
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-```
+- **7 Themed UI**: Cottage Core, Sakura Blossom, Ocean Breeze, Sunset Glow, Forest Green, Dark Academia, Midnight
+- **Glassmorphism Effects**: Backdrop blur with transparency on all note cards
+- **Note Types**: Text, checklist, drawing canvas, voice recording
+- **File Attachments**: Image upload and display
+- **Drag & Drop**: Reorder notes with @hello-pangea/dnd
+- **Search & Filter**: Content search, label filtering, archive system
+- **Local Storage**: Persistent data with JSON export/import
+- **PWA Ready**: Service worker registration
 
 ## Tech Stack
 
-- React 19
-- Vite
-- Tailwind CSS
-- Google Fonts
+- React 19 + Vite
+- Tailwind CSS (backdrop-blur, glassmorphism)
+- Lucide React icons
+- date-fns for timestamps
+- Canvas API for drawing
 
-## License
+## Setup
 
-MIT
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
