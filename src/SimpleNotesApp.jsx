@@ -35,7 +35,12 @@ import {
   Tag,
   Brush,
   Heart,
-  Activity
+  Activity,
+  Sparkles,
+  Star,
+  Zap,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 // Simple Drawing Canvas Component
@@ -349,14 +354,9 @@ function SimpleNotesApp() {
         { emoji: "💜", position: "top-10 left-10", size: "text-6xl", animation: "animate-bounce", opacity: "opacity-70", delay: "" },
         { emoji: "🌸", position: "top-20 right-20", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-80", delay: "delay-300" },
         { emoji: "✨", position: "bottom-20 left-20", size: "text-7xl", animation: "animate-bounce", opacity: "opacity-60", delay: "delay-1000" },
-        { emoji: "💫", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-2000" },
-        { emoji: "🌺", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-65", delay: "delay-500" },
-        { emoji: "🦋", position: "top-2/3 right-1/3", size: "text-6xl", animation: "animate-pulse", opacity: "opacity-70", delay: "delay-1500" },
-        { emoji: "🌙", position: "top-1/4 right-1/4", size: "text-4xl", animation: "animate-bounce", opacity: "opacity-60", delay: "delay-800" },
-        { emoji: "⭐", position: "bottom-1/3 left-1/3", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-1200" },
-        { emoji: "💎", position: "top-3/4 left-10", size: "text-3xl", animation: "animate-bounce", opacity: "opacity-65", delay: "delay-400" },
-        { emoji: "🔮", position: "bottom-1/4 right-1/4", size: "text-5xl", animation: "animate-pulse", opacity: "opacity-70", delay: "delay-1800" }
-      ],
+        { emoji: "🪻", position: "bottom-10 right-10", size: "text-4xl", animation: "animate-pulse", opacity: "opacity-75", delay: "delay-2000" },
+        { emoji: "🍫", position: "top-1/3 left-1/4", size: "text-5xl", animation: "animate-bounce", opacity: "opacity-65", delay: "delay-500" }
+        ],
       overlayGradient: "from-purple-100/25 to-violet-100/30"
     },
     cottagecore: {
@@ -1049,27 +1049,25 @@ function SimpleNotesApp() {
 
   return (
     <div className={`min-h-screen ${theme.appBackground} p-4 relative overflow-hidden`}>
-      {/* Floating decoration elements */}
-      {theme.floatingElements.map((element, index) => (
+      
+      {/* Subtle Background Elements - Clean and minimal */}
+      {theme.floatingElements.slice(0, 2).map((element, index) => (
         <div
           key={index}
-          className={`fixed ${element.position} ${element.size} ${element.opacity} ${element.animation} pointer-events-none z-10 select-none ${element.delay || ''}`}
-          style={{
-            animationDelay: element.delay ? (element.delay.includes('delay-') ? `${element.delay.split('delay-')[1]}ms` : '1000ms') : '0s'
-          }}
+          className={`fixed ${element.position} ${element.size} opacity-20 pointer-events-none z-10 select-none`}
         >
           {element.emoji}
         </div>
       ))}
       
       {/* Modern Navigation Bar */}
-      <nav className={`${theme.background} ${theme.border} border-b backdrop-blur-lg sticky top-0 z-30 mb-8`}>
+      <nav className={`${theme.background} ${theme.border} border-b backdrop-blur-lg sticky top-0 z-30 mb-8 transition-shadow duration-200`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
             {/* Brand Section */}
             <div className="flex items-center space-x-3">
-              <div className={`p-2 rounded-xl bg-gradient-to-br ${theme.buttonGradient} shadow-lg`}>
+              <div className={`p-2 rounded-xl bg-gradient-to-br ${theme.buttonGradient} shadow-sm`}>
                 <FileText className={`w-6 h-6 ${theme.buttonText}`} />
               </div>
               <div className="flex flex-col">
@@ -1118,7 +1116,7 @@ function SimpleNotesApp() {
               {/* Logout Button */}
               <button
                 onClick={logout}
-                className={`px-4 py-2 text-sm font-medium rounded-xl border transition-all duration-200 hover:scale-105 hover:shadow-md ${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-sm`}
+                className={`px-4 py-2 text-sm font-medium rounded-xl border transition-all duration-200 hover:shadow-sm ${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-sm`}
               >
                 <span className="hidden sm:inline">Logout</span>
                 <span className="sm:hidden">👋</span>
@@ -1132,7 +1130,7 @@ function SimpleNotesApp() {
 
         {/* Floating Theme Selector */}
         <div className="fixed top-20 right-4 z-40">
-          <div className={`${theme.background} ${theme.border} border rounded-2xl p-3 backdrop-blur-lg shadow-xl transform transition-all duration-300 hover:scale-105`}>
+          <div className={`${theme.background} ${theme.border} border rounded-2xl p-3 backdrop-blur-lg shadow-lg transition-shadow duration-200 hover:shadow-xl`}>
             <div className="flex items-center gap-2 mb-3">
               <Palette className={`w-4 h-4 ${theme.accentText}`} />
               <span className={`text-xs font-medium ${theme.headerText}`}>Themes</span>
@@ -1142,19 +1140,21 @@ function SimpleNotesApp() {
                 <button
                   key={key}
                   onClick={() => handleThemeChange(key)}
-                  className={`relative group flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-300 hover:scale-110 hover:shadow-lg ${
+                  className={`relative flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
                     currentTheme === key 
                       ? `bg-gradient-to-br ${themeData.selectorActiveGradient} border-white shadow-lg ring-2 ring-white/50 text-white` 
-                      : `bg-gradient-to-br ${themeData.selectorGradient} ${themeData.selectorBorder} hover:shadow-md text-white/90 hover:text-white`
+                      : `bg-gradient-to-br ${themeData.selectorGradient} ${themeData.selectorBorder} hover:shadow-lg text-white/90 hover:text-white`
                   }`}
                   title={themeData.name}
                 >
-                  <div className={`text-lg transition-transform group-hover:scale-125 ${currentTheme === key ? 'animate-bounce' : ''}`}>
+                  <div className="text-lg z-10 relative">
                     {themeData.emoji}
                   </div>
+                  
+                  {/* Selection indicator */}
                   {currentTheme === key && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
-                      <Check className="w-2 h-2 text-gray-800" />
+                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-br from-white to-purple-200 rounded-full flex items-center justify-center shadow-md border-2 border-purple-300">
+                      <Check className="w-2 h-2 text-purple-600" />
                     </div>
                   )}
                 </button>
@@ -1167,20 +1167,25 @@ function SimpleNotesApp() {
         <div className="mb-6 space-y-4">
           {/* Main Controls Row */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              placeholder="Search notes, labels..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`flex-1 px-4 py-3 border rounded-xl ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all`}
-            />
+            <div className="relative flex-1">
+              {/* Search input */}
+              <input
+                type="text"
+                placeholder="Search your notes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full px-4 py-3 pl-12 border rounded-xl ${theme.background} ${theme.border} ${theme.subText} ${theme.placeholderText} focus:outline-none focus:ring-2 focus:ring-purple-300/50 focus:border-purple-400 transition-colors duration-200`}
+              />
+              {/* Search icon */}
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme.accentText}`} />
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowArchived(!showArchived)}
-                className={`px-4 py-3 rounded-xl border transition-all flex items-center gap-2 hover:scale-105 ${
+                className={`px-4 py-3 rounded-xl border transition-colors duration-200 flex items-center gap-2 ${
                   showArchived 
-                    ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-md` 
-                    : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100 hover:shadow-md`
+                    ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-sm` 
+                    : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100`
                 }`}
               >
                 {showArchived ? (
@@ -1197,27 +1202,27 @@ function SimpleNotesApp() {
               </button>
               <button
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className={`px-4 py-3 rounded-xl border bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100 hover:shadow-md transition-all hover:scale-105`}
+                className={`px-4 py-3 rounded-xl border bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100 transition-colors duration-200`}
               >
                 {viewMode === 'grid' ? '☰ List' : '⊞ Grid'}
               </button>
               <button
                 onClick={() => setShowCreateForm(!showCreateForm)}
-                className={`px-4 py-3 rounded-xl border transition-all flex items-center gap-2 hover:scale-105 ${
+                className={`px-6 py-3 rounded-xl border transition-colors duration-200 flex items-center gap-2 ${
                   showCreateForm || editingNote
-                    ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-md` 
-                    : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100 hover:shadow-md`
+                    ? `${theme.buttonGradient} bg-gradient-to-r ${theme.buttonText} ${theme.buttonBorder} shadow-sm` 
+                    : `bg-white/50 ${theme.accentText} border-gray-300 hover:bg-gray-100`
                 }`}
               >
                 {showCreateForm || editingNote ? (
                   <>
                     <X className="w-4 h-4" />
-                    Close
+                    <span className="font-medium">Close</span>
                   </>
                 ) : (
                   <>
                     <Plus className="w-4 h-4" />
-                    New Note
+                    <span className="font-medium">New Note</span>
                   </>
                 )}
               </button>
@@ -1653,12 +1658,13 @@ function SimpleNotesApp() {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`note-card stagger-item ${theme.background} ${theme.border} border rounded-lg p-4 shadow-sm relative group hover:shadow-md transition-all duration-300 transform hover:scale-105 fade-in-up glow-on-hover ${
-                          snapshot.isDragging ? 'rotate-3 shadow-lg scale-110' : ''
+                        className={`note-card ${theme.background} ${theme.border} border rounded-lg p-4 shadow-sm relative group hover:shadow-md transition-shadow duration-200 ${
+                          snapshot.isDragging ? 'shadow-lg' : ''
                         }`}
                         role="article"
                         aria-label={`Note: ${note.title}`}
                         tabIndex={0}
+                        style={{animationDelay: `${index * 0.1}s`}}
                       >
               {/* Pin indicator */}
               {note.is_pinned && (
@@ -1824,18 +1830,18 @@ function SimpleNotesApp() {
               </div>
 
               {/* Note actions */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <div className="flex gap-1">
                   <button
                     onClick={() => togglePin(note.id)}
-                    className={`p-1 rounded text-xs hover:bg-white/50 transition-all ${note.is_pinned ? 'text-yellow-600' : 'text-gray-600'}`}
+                    className={`p-1 rounded text-xs hover:bg-white/50 transition-colors duration-200 ${note.is_pinned ? 'text-yellow-600' : 'text-gray-600'}`}
                     title={note.is_pinned ? 'Unpin' : 'Pin'}
                   >
                     <Pin className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleEdit(note)}
-                    className="p-1 rounded text-xs text-blue-600 hover:bg-white/50 transition-all"
+                    className="p-1 rounded text-xs text-blue-600 hover:bg-white/50 transition-colors duration-200"
                     title="Edit"
                     aria-label={`Edit note: ${note.title}`}
                   >
@@ -1843,7 +1849,7 @@ function SimpleNotesApp() {
                   </button>
                   <button
                     onClick={() => shareNote(note)}
-                    className="p-1 rounded text-xs text-green-600 hover:bg-white/50 transition-all"
+                    className="p-1 rounded text-xs text-green-600 hover:bg-white/50 transition-colors duration-200"
                     title="Share"
                     aria-label={`Share note: ${note.title}`}
                   >
@@ -1852,7 +1858,7 @@ function SimpleNotesApp() {
                   {note.version > 1 && (
                     <button
                       onClick={() => {setSelectedNoteHistory(note); setShowVersionHistory(true);}}
-                      className="p-1 rounded text-xs text-purple-600 hover:bg-white/50 transition-all"
+                      className="p-1 rounded text-xs text-purple-600 hover:bg-white/50 transition-colors duration-200"
                       title="Version History"
                       aria-label={`View history for: ${note.title}`}
                     >
@@ -1861,7 +1867,7 @@ function SimpleNotesApp() {
                   )}
                   <button
                     onClick={() => toggleArchive(note.id)}
-                    className="p-1 rounded text-xs text-gray-600 hover:bg-white/50 transition-all"
+                    className="p-1 rounded text-xs text-gray-600 hover:bg-white/50 transition-colors duration-200"
                     title={note.is_archived ? 'Unarchive' : 'Archive'}
                   >
                     {note.is_archived ? (
@@ -1872,7 +1878,7 @@ function SimpleNotesApp() {
                   </button>
                   <button
                     onClick={() => deleteNote(note.id)}
-                    className="p-1 rounded text-xs text-red-600 hover:bg-white/50 transition-all"
+                    className="p-1 rounded text-xs text-red-600 hover:bg-white/50 transition-colors duration-200"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1881,13 +1887,13 @@ function SimpleNotesApp() {
               </div>
 
               {/* Color picker for individual notes */}
-              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <div className="flex gap-1">
                   {colorOptions.slice(0, 6).map((color) => (
                     <button
                       key={color.value}
                       onClick={() => updateNoteColor(note.id, color.value)}
-                        className={`w-4 h-4 rounded-full border ${color.class || 'bg-white'} hover:scale-110 transition-transform`}
+                        className={`w-4 h-4 rounded-full border ${color.class || 'bg-white'} hover:scale-105 transition-transform duration-200`}
                         title={`Change to ${color.name}`}
                       />
                     ))}
@@ -1904,11 +1910,52 @@ function SimpleNotesApp() {
 </DragDropContext>
 
 {getFilteredAndSortedNotes().length === 0 && (
-          <div className={`text-center py-12 ${theme.subText}`}>
-            <div className="text-6xl mb-4">{theme.decorative[0]}</div>
-            <p className="text-lg">
-              {showArchived ? 'No archived notes yet' : 'No notes yet. Create your first note above! ✨'}
-            </p>
+          <div className={`text-center py-16 ${theme.subText} animate-fade-in`}>
+            {/* Magical empty state */}
+            <div className="relative inline-block">
+              <div className="text-8xl mb-6 animate-float">{theme.decorative[0]}</div>
+              
+              {/* Floating magical elements around the emoji */}
+              <div className="absolute -top-4 -left-4 animate-bounce" style={{animationDelay: '0.5s'}}>
+                <Sparkles className="w-6 h-6 text-purple-400/60" />
+              </div>
+              <div className="absolute -top-2 -right-6 animate-pulse" style={{animationDelay: '1s'}}>
+                <Star className="w-5 h-5 text-pink-400/60" />
+              </div>
+              <div className="absolute -bottom-4 -right-4 animate-bounce" style={{animationDelay: '1.5s'}}>
+                <Heart className="w-4 h-4 text-red-400/60" />
+              </div>
+              <div className="absolute -bottom-2 -left-6 animate-pulse" style={{animationDelay: '2s'}}>
+                <Zap className="w-4 h-4 text-yellow-400/60" />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-2xl font-medium bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent animate-gradient-shift">
+                {showArchived ? 'No archived notes yet' : 'Your magical notebook awaits! ✨'}
+              </p>
+              {!showArchived && (
+                <p className="text-lg opacity-75 animate-pulse">
+                  Create your first note and watch the magic happen! 
+                  <span className="inline-block animate-bounce ml-2">🌟</span>
+                </p>
+              )}
+              
+              {/* Call-to-action */}
+              {!showArchived && (
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-medium hover:from-purple-600 hover:to-pink-600 transition-colors duration-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Plus className="w-5 h-5" />
+                      <span>Create Your First Note</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

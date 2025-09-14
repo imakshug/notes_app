@@ -86,6 +86,27 @@ class ApiClient {
     return response;
   }
 
+  async forgotPassword(email) {
+    const response = await this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    
+    return response;
+  }
+
+  async resetPassword(token, newPassword) {
+    const response = await this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        token: token,
+        new_password: newPassword 
+      }),
+    });
+    
+    return response;
+  }
+
   logout() {
     this.setToken(null);
   }

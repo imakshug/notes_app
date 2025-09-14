@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
 import os
 from typing import List, Optional
 import uvicorn
@@ -12,9 +13,14 @@ from schemas import (
     NoteCreate, NoteUpdate, NoteResponse, 
     UserCreate, UserLogin, UserResponse,
     LabelCreate, LabelResponse,
-    LinkPreviewResponse
+    LinkPreviewResponse,
+    ForgotPasswordRequest, ResetPasswordRequest, MessageResponse
 )
-from auth import get_current_user, create_access_token, verify_password, get_password_hash
+from auth import (
+    get_current_user, create_access_token, verify_password, get_password_hash,
+    create_password_reset_token, verify_password_reset_token, send_password_reset_email,
+    PASSWORD_RESET_EXPIRE_MINUTES
+)
 from link_preview import get_link_preview
 from file_handler import save_file, delete_file
 
@@ -55,7 +61,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Create new user
-    hashed_password = get_password_hash(user.password)
+    hashed_password = await get_password_hash(user.password)
     db_user = User(
         email=user.email,
         username=user.username,
@@ -79,7 +85,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 async def login(user: UserLogin, db: Session = Depends(get_db)):
     # Authenticate user
     db_user = db.query(User).filter(User.email == user.email).first()
-    if not db_user or not verify_password(user.password, db_user.hashed_password):
+    if not db_user or not await verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Create access token
@@ -91,6 +97,58 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
         username=db_user.username,
         access_token=access_token
     )
+
+@app.post("/auth/forgot-password", response_model=MessageResponse)
+async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    # Check if user exists
+    db_user = db.query(User).filter(User.email == request.email).first()
+    if not db_user:
+        # Don't reveal if email exists or not for security
+        return MessageResponse(message="If the email exists, a password reset link has been sent.")
+    
+    # Create password reset token
+    reset_token = create_password_reset_token(db_user.email)
+    
+    # Store token in database with expiry (optional, for tracking)
+    db_user.reset_token = reset_token
+    db_user.reset_token_expires = datetime.utcnow() + timedelta(minutes=PASSWORD_RESET_EXPIRE_MINUTES)
+    db.commit()
+    
+    # Send email (in development, this will just print to console)
+    email_sent = send_password_reset_email(db_user.email, reset_token)
+    
+    if not email_sent:
+        raise HTTPException(status_code=500, detail="Failed to send password reset email")
+    
+    return MessageResponse(message="If the email exists, a password reset link has been sent.")
+
+@app.post("/auth/reset-password", response_model=MessageResponse)
+async def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    # Verify the reset token
+    email = verify_password_reset_token(request.token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    # Find user by email
+    db_user = db.query(User).filter(User.email == email).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Validate that the token matches (optional additional security)
+    if db_user.reset_token != request.token:
+        raise HTTPException(status_code=400, detail="Invalid reset token")
+    
+    # Check token expiry (additional check)
+    if db_user.reset_token_expires and db_user.reset_token_expires < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    
+    # Update password
+    db_user.hashed_password = get_password_hash(request.new_password)
+    db_user.reset_token = None
+    db_user.reset_token_expires = None
+    db.commit()
+    
+    return MessageResponse(message="Password has been reset successfully")
 
 # Notes endpoints
 @app.get("/notes", response_model=List[NoteResponse])

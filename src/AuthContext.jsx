@@ -71,6 +71,36 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await apiClient.forgotPassword(email);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (token, newPassword) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await apiClient.resetPassword(token, newPassword);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -79,6 +109,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    forgotPassword,
+    resetPassword,
     clearError: () => setError(null),
   };
 

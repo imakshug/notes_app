@@ -10,6 +10,11 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     username = Column(String(100), nullable=False)
     hashed_password = Column(String(255), nullable=False)
+    
+    # Password reset fields
+    reset_token = Column(String(500), nullable=True)
+    reset_token_expires = Column(DateTime(timezone=True), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

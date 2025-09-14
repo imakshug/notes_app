@@ -2,21 +2,48 @@ import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 
 const SimpleAuthModal = () => {
-  const { login, register, isLoading, error } = useAuth();
+  const { login, register, forgotPassword, resetPassword, isLoading, error } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [credentials, setCredentials] = useState({
     username: '',
     email: '',
-    password: ''
+    password: '',
+    resetToken: '',
+    newPassword: ''
   });
   const [localError, setLocalError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Check for reset token in URL params on component mount
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('token');
+    if (resetToken) {
+      setIsResetPassword(true);
+      setIsLogin(false);
+      setIsForgotPassword(false);
+      setCredentials(prev => ({ ...prev, resetToken }));
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
+    setSuccessMessage('');
     
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        await forgotPassword(credentials.email);
+        setSuccessMessage('If the email exists, a password reset link has been sent.');
+      } else if (isResetPassword) {
+        await resetPassword(credentials.resetToken, credentials.newPassword);
+        setSuccessMessage('Password has been reset successfully. You can now log in.');
+        setIsResetPassword(false);
+        setIsForgotPassword(false);
+        setIsLogin(true);
+      } else if (isLogin) {
         await login({
           email: credentials.email,
           password: credentials.password
@@ -31,8 +58,23 @@ const SimpleAuthModal = () => {
       console.log('Authentication successful!');
     } catch (error) {
       console.error('Auth error:', error);
-      setLocalError(`${isLogin ? 'Login' : 'Registration'} failed: ${error.message}`);
+      setLocalError(`${isForgotPassword ? 'Password reset request' : isResetPassword ? 'Password reset' : isLogin ? 'Login' : 'Registration'} failed: ${error.message}`);
     }
+  };
+
+  const handleForgotPassword = () => {
+    setIsForgotPassword(true);
+    setIsLogin(false);
+    setLocalError('');
+    setSuccessMessage('');
+  };
+
+  const handleBackToLogin = () => {
+    setIsForgotPassword(false);
+    setIsResetPassword(false);
+    setIsLogin(true);
+    setLocalError('');
+    setSuccessMessage('');
   };
 
   const handleGoogleSignIn = async () => {
@@ -52,12 +94,6 @@ const SimpleAuthModal = () => {
         {/* Lavender flowers */}
         <div className="absolute top-10 left-10 text-6xl opacity-20 animate-bounce">🌸</div>
         <div className="absolute top-20 right-20 text-5xl opacity-25 animate-pulse delay-1000">💜</div>
-        <div className="absolute bottom-20 left-20 text-7xl opacity-15 animate-bounce delay-2000">🦋</div>
-        <div className="absolute bottom-10 right-10 text-4xl opacity-30 animate-pulse delay-500">🌿</div>
-        <div className="absolute top-1/3 left-1/4 text-5xl opacity-20 animate-bounce delay-1500">✨</div>
-        <div className="absolute top-2/3 right-1/3 text-6xl opacity-25 animate-pulse delay-3000">🌙</div>
-        <div className="absolute top-1/2 left-10 text-4xl opacity-15 animate-bounce delay-700">🔮</div>
-        <div className="absolute bottom-1/3 right-20 text-5xl opacity-20 animate-pulse delay-2500">💫</div>
         <div className="absolute top-3/4 left-1/3 text-3xl opacity-25 animate-bounce delay-1200">🌺</div>
         <div className="absolute top-16 right-1/4 text-4xl opacity-18 animate-pulse delay-800">🪻</div>
       </div>
@@ -88,31 +124,47 @@ const SimpleAuthModal = () => {
           {/* Content Area */}
           <div className="px-8 py-8">
 
-            {/* Tab Switcher */}
-            <div className="flex mb-6 bg-purple-50 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
-                  isLogin 
-                    ? 'bg-gradient-to-r from-purple-300 to-indigo-300 text-indigo-900 shadow-sm' 
-                    : 'text-purple-700 hover:bg-purple-100'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
-                  !isLogin 
-                    ? 'bg-gradient-to-r from-purple-300 to-indigo-300 text-indigo-900 shadow-sm' 
-                    : 'text-purple-700 hover:bg-purple-100'
-                }`}
-              >
-                Register
-              </button>
-            </div>
+            {/* Tab Switcher / Header */}
+            {!isForgotPassword && !isResetPassword && (
+              <div className="flex mb-6 bg-purple-50 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(true)}
+                  className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
+                    isLogin 
+                      ? 'bg-gradient-to-r from-purple-300 to-indigo-300 text-indigo-900 shadow-sm' 
+                      : 'text-purple-700 hover:bg-purple-100'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(false)}
+                  className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
+                    !isLogin 
+                      ? 'bg-gradient-to-r from-purple-300 to-indigo-300 text-indigo-900 shadow-sm' 
+                      : 'text-purple-700 hover:bg-purple-100'
+                  }`}
+                >
+                  Register
+                </button>
+              </div>
+            )}
+
+            {(isForgotPassword || isResetPassword) && (
+              <div className="mb-6 text-center">
+                <h3 className="text-xl font-semibold text-indigo-700 mb-2">
+                  {isForgotPassword ? 'Reset Your Password' : 'Set New Password'}
+                </h3>
+                <p className="text-purple-600 text-sm">
+                  {isForgotPassword 
+                    ? 'Enter your email address and we\'ll send you a reset link.'
+                    : 'Enter your new password below.'
+                  }
+                </p>
+              </div>
+            )}
 
             {/* Google Sign-in Button */}
             <button
@@ -135,9 +187,26 @@ const SimpleAuthModal = () => {
               <div className="flex-1 h-px bg-indigo-200"></div>
             </div>
 
+            {/* Error/Success Messages */}
+            {(localError || error || successMessage) && (
+              <div className="mb-4">
+                {(localError || error) && (
+                  <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {localError || error}
+                  </div>
+                )}
+                {successMessage && (
+                  <div className="bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded-lg text-sm">
+                    {successMessage}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
+              {/* Username field (register only) */}
+              {!isLogin && !isForgotPassword && !isResetPassword && (
                 <div>
                   <label className="block text-sm font-medium text-indigo-700 mb-2">
                     Username (optional)
@@ -152,38 +221,67 @@ const SimpleAuthModal = () => {
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-indigo-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={credentials.email}
-                  onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-                  className="w-full px-4 py-3 bg-white/75 border-2 border-purple-200 rounded-lg focus:border-indigo-400 focus:outline-none transition-all duration-200 placeholder-purple-400"
-                  required
-                />
-              </div>
+              {/* Email field (login, register, forgot password) */}
+              {!isResetPassword && (
+                <div>
+                  <label className="block text-sm font-medium text-indigo-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={credentials.email}
+                    onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+                    className="w-full px-4 py-3 bg-white/75 border-2 border-purple-200 rounded-lg focus:border-indigo-400 focus:outline-none transition-all duration-200 placeholder-purple-400"
+                    required
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-indigo-700 mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={credentials.password}
-                  onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                  className="w-full px-4 py-3 bg-white/75 border-2 border-purple-200 rounded-lg focus:border-indigo-400 focus:outline-none transition-all duration-200 placeholder-purple-400"
-                  required
-                />
-              </div>
+              {/* Password field (login, register) */}
+              {!isForgotPassword && !isResetPassword && (
+                <div>
+                  <label className="block text-sm font-medium text-indigo-700 mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    value={credentials.password}
+                    onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                    className="w-full px-4 py-3 bg-white/75 border-2 border-purple-200 rounded-lg focus:border-indigo-400 focus:outline-none transition-all duration-200 placeholder-purple-400"
+                    required
+                  />
+                </div>
+              )}
 
-              {/* Error Display */}
-              {(error || localError) && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700">
-                  <span className="text-sm font-medium">{error || localError}</span>
+              {/* New Password field (reset password only) */}
+              {isResetPassword && (
+                <div>
+                  <label className="block text-sm font-medium text-indigo-700 mb-2">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter your new password"
+                    value={credentials.newPassword}
+                    onChange={(e) => setCredentials({...credentials, newPassword: e.target.value})}
+                    className="w-full px-4 py-3 bg-white/75 border-2 border-purple-200 rounded-lg focus:border-indigo-400 focus:outline-none transition-all duration-200 placeholder-purple-400"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Forgot Password Link */}
+              {isLogin && !isForgotPassword && !isResetPassword && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+                  >
+                    Forgot your password?
+                  </button>
                 </div>
               )}
 
@@ -203,11 +301,11 @@ const SimpleAuthModal = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {isLogin ? 'Signing in...' : 'Creating account...'}
+                    {isForgotPassword ? 'Sending reset link...' : isResetPassword ? 'Resetting password...' : isLogin ? 'Signing in...' : 'Creating account...'}
                   </span>
                 ) : (
                   <span>
-                    {isLogin ? 'Sign In' : 'Create Account'}
+                    {isForgotPassword ? 'Send Reset Link' : isResetPassword ? 'Reset Password' : isLogin ? 'Sign In' : 'Create Account'}
                   </span>
                 )}
               </button>
@@ -215,16 +313,30 @@ const SimpleAuthModal = () => {
 
             {/* Footer */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-indigo-600">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="font-semibold text-indigo-700 hover:text-indigo-800 hover:underline"
-                >
-                  {isLogin ? 'Register here' : 'Sign in instead'}
-                </button>
-              </p>
+              {!isForgotPassword && !isResetPassword && (
+                <p className="text-sm text-indigo-600">
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  <button
+                    type="button"
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="font-semibold text-indigo-700 hover:text-indigo-800 hover:underline"
+                  >
+                    {isLogin ? 'Register here' : 'Sign in instead'}
+                  </button>
+                </p>
+              )}
+              
+              {(isForgotPassword || isResetPassword) && (
+                <p className="text-sm text-indigo-600">
+                  <button
+                    type="button"
+                    onClick={handleBackToLogin}
+                    className="font-semibold text-indigo-700 hover:text-indigo-800 hover:underline"
+                  >
+                    ← Back to Sign In
+                  </button>
+                </p>
+              )}
             </div>
           </div>
         </div>
