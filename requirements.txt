@@ -1,24 +1,19 @@
-# Core FastAPI dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
-pydantic==2.5.0
+# Minimal FastAPI setup for deployment
+fastapi==0.95.0
+uvicorn==0.20.0
+sqlalchemy==1.4.48
 python-multipart==0.0.6
 
-# Authentication
+# Authentication (simplified)
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
 # Configuration and HTTP
 python-decouple==3.8
-httpx==0.25.2
-requests==2.31.0
+requests==2.28.0
 
 # Web scraping (for link previews) 
-beautifulsoup4==4.12.2
+beautifulsoup4==4.11.1
 
-# File handling (basic)
-aiofiles==23.2.1
-
-# Database drivers
-psycopg2-binary==2.9.9
+# Database drivers (minimal)
+psycopg2-binary==2.9.5
