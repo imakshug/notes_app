@@ -1,9 +1,17 @@
-# This is a monorepo with frontend and backend
-# The backend is in the /backend directory
-# Railway should deploy the FastAPI backend
+# Railway deployment entry point
+import os
+import sys
 
-from backend.main import app
+# Add the backend directory to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# Import the FastAPI app from backend.main
+try:
+    from main import app
+    print("✅ Successfully imported FastAPI app")
+except ImportError as e:
+    print(f"❌ Failed to import app: {e}")
+    raise
+
+# Export the app so uvicorn can find it
+__all__ = ['app']
