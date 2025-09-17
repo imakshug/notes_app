@@ -1,0 +1,4 @@
+# Railway deployment requirements
+# This installs dependencies for the backend
+
+-r backend/requirements.txt
