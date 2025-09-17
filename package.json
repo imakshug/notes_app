@@ -23,7 +23,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:prod": "NODE_ENV=production vite build",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod --dir=dist"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
@@ -41,10 +44,8 @@
     "lucide-react": "^0.542.0",
     "quill": "^2.0.3",
     "react": "^19.1.1",
-    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^19.1.1",
-    "react-quill": "^2.0.0",
-    "react-sortable-hoc": "^2.0.0"
+    "react-quill": "^2.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
