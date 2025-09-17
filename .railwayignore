@@ -1,0 +1,39 @@
+# Railway should only deploy the backend directory
+# Ignore all frontend files
+
+# Frontend directories and files
+src/
+public/
+dist/
+node_modules/
+package.json
+package-lock.json
+vite.config.js
+tailwind.config.js
+postcss.config.js
+eslint.config.js
+index.html
+
+# Development files
+.env
+.env.local
+.env.development
+
+# Documentation
+README.md
+DEPLOYMENT.md
+image.png
+
+# Deployment configs for other platforms
+vercel.json
+netlify.toml
+deploy.sh
+deploy.bat
+Dockerfile.frontend
+nginx.conf
+docker-compose.yml
+
+# Only keep backend files:
+# backend/
+# railway.toml
+# .github/ (for CI/CD)

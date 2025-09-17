@@ -1,11 +1,11 @@
 # Railway Configuration for Backend Deployment
-# Place this file in the backend directory
 
 [build]
 builder = "NIXPACKS"
+buildCommand = "cd backend && pip install -r requirements.txt"
 
 [deploy]
-startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+startCommand = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
