@@ -17,9 +17,8 @@ requests==2.31.0
 # Web scraping (for link previews) 
 beautifulsoup4==4.12.2
 
-# File handling
+# File handling (basic)
 aiofiles==23.2.1
-Pillow==9.5.0
 
 # Database drivers
 psycopg2-binary==2.9.9
