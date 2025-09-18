@@ -1,7 +1,7 @@
 import React from 'react';
 import ErrorBoundary from './ErrorBoundary';
 import { AuthProvider } from './AuthContext';
-import SimpleNotesApp from './SimpleNotesApp';
+import SimpleNotesApp from './SimpleNotesAppBasic';
 
 function App() {
   console.log('App component is rendering');
