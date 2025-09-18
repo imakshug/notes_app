@@ -1,19 +1,4 @@
-# Minimal FastAPI setup for deployment
+# Ultra minimal FastAPI for Railway deployment
 fastapi==0.95.0
 uvicorn==0.20.0
 sqlalchemy==1.4.48
-python-multipart==0.0.6
-
-# Authentication (simplified)
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-
-# Configuration and HTTP
-python-decouple==3.8
-requests==2.28.0
-
-# Web scraping (for link previews) 
-beautifulsoup4==4.11.1
-
-# Database drivers (minimal)
-psycopg2-binary==2.9.5
