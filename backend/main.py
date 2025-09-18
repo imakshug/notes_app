@@ -24,14 +24,19 @@ from auth import (
 from link_preview import get_link_preview
 from file_handler import save_file, delete_file
 
-# Create tables
-Base.metadata.create_all(bind=engine)
-
 app = FastAPI(
     title="Notes App API",
     description="FastAPI backend for React Notes App with themes and link previews",
     version="1.0.0"
 )
+
+# Create tables (with error handling)
+try:
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created successfully")
+except Exception as e:
+    print(f"⚠️ Database connection issue: {e}")
+    print("App will start but database features may not work")
 
 # CORS middleware - Production ready
 allowed_origins = [
@@ -62,13 +67,35 @@ app.add_middleware(
 
 security = HTTPBearer()
 
+@app.on_event("startup")
+async def startup_event():
+    print("🚀 Notes App API starting up...")
+    print(f"📊 Environment: {os.getenv('ENVIRONMENT', 'development')}")
+    print(f"🌐 Port: {os.getenv('PORT', '8000')}")
+    print(f"🔗 Allowed Origins: {os.getenv('ALLOWED_ORIGINS', 'localhost only')}")
+
 @app.get("/")
 async def root():
-    return {"message": "Notes App API", "version": "1.0.0"}
+    return {"message": "Notes App API", "version": "1.0.0", "status": "running"}
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "message": "API is running"}
+    """Health check endpoint for Railway deployment."""
+    try:
+        # Test database connection
+        db = next(get_db())
+        db.execute("SELECT 1")
+        db_status = "connected"
+    except Exception as e:
+        print(f"Database health check failed: {e}")
+        db_status = "disconnected"
+    
+    return {
+        "status": "healthy", 
+        "message": "Notes App API is running",
+        "database": db_status,
+        "version": "1.0.0"
+    }
 
 # Authentication endpoints
 @app.post("/auth/register", response_model=UserResponse)
