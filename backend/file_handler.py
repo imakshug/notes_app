@@ -1,13 +1,11 @@
 import os
 import uuid
 import aiofiles
-from fastapi import UploadFile, HTTPEx    async def _create_thumbnail(self, image_path: Path, filename: str):
-        """Create thumbnail for image - temporarily disabled."""
-        # TODO: Re-enable when Pillow is working
-        return
-        # try:
-        #     with Image.open(image_path) as img:
-        #         # Convert to RGB if necessary
+from fastapi import UploadFile, HTTPException
+from pathlib import Path
+# from PIL import Image  # Temporarily disabled for deployment
+import io
+from typing import Optional
         #         if img.mode in ('RGBA', 'P'):
         #             img = img.convert('RGB')
         #         
