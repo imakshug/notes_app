@@ -3,8 +3,9 @@
 A beautiful, feature-rich notes application built with React and FastAPI that transforms your note-taking experience into something truly magical.
 
 **🚀 Now Live in Production!** 
-- Frontend: [Vercel](https://my-notes-app-two-gray.vercel.app)
+- Frontend: Deployed on Vercel (URL updated after deployment)
 - Backend: [Render](https://notes-app-backend-mwkx.onrender.com)
+- Status: ✅ Backend Active | 🔄 Frontend Deploying
 
 ![My Notes App Screenshot](public/image.png)
 
