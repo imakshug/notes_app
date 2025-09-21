@@ -3,14 +3,18 @@ from typing import Optional, List, Any, Dict
 from datetime import datetime
 
 # User schemas
+
+
 class UserCreate(BaseModel):
     email: EmailStr
     username: str
     password: str
 
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
 
 class UserResponse(BaseModel):
     id: int
@@ -22,20 +26,26 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+
 
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
+
 class MessageResponse(BaseModel):
     message: str
 
 # Note schemas
+
+
 class ChecklistItem(BaseModel):
     text: str
     completed: bool = False
+
 
 class NoteCreate(BaseModel):
     title: str
@@ -52,6 +62,7 @@ class NoteCreate(BaseModel):
     link_url: Optional[str] = None
     link_text: Optional[str] = None
     labels: Optional[List[str]] = None
+
 
 class NoteUpdate(BaseModel):
     title: Optional[str] = None
@@ -70,6 +81,7 @@ class NoteUpdate(BaseModel):
     link_url: Optional[str] = None
     link_text: Optional[str] = None
     labels: Optional[List[str]] = None
+
 
 class NoteResponse(BaseModel):
     id: int
@@ -97,9 +109,12 @@ class NoteResponse(BaseModel):
         from_attributes = True
 
 # Label schemas
+
+
 class LabelCreate(BaseModel):
     name: str
     color: str = "blue"
+
 
 class LabelResponse(BaseModel):
     id: int
@@ -112,6 +127,8 @@ class LabelResponse(BaseModel):
         from_attributes = True
 
 # Link preview schemas
+
+
 class LinkPreviewResponse(BaseModel):
     url: str
     title: Optional[str] = None
@@ -123,6 +140,8 @@ class LinkPreviewResponse(BaseModel):
         from_attributes = True
 
 # File upload schemas
+
+
 class FileUploadResponse(BaseModel):
     file_url: str
     filename: str
@@ -130,6 +149,8 @@ class FileUploadResponse(BaseModel):
     size: int
 
 # Mood detection schemas
+
+
 class MoodAnalysis(BaseModel):
     text: str
     mood: str

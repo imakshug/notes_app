@@ -9,6 +9,7 @@ from schemas import LinkPreviewResponse
 from models import LinkPreview
 from database import SessionLocal
 
+
 class LinkPreviewService:
     def __init__(self):
         self.timeout = 10.0
@@ -20,7 +21,8 @@ class LinkPreviewService:
         # Check cache first
         db = SessionLocal()
         try:
-            cached = db.query(LinkPreview).filter(LinkPreview.url == url).first()
+            cached = db.query(LinkPreview).filter(
+                LinkPreview.url == url).first()
             if cached and cached.cache_expiry > datetime.utcnow():
                 return LinkPreviewResponse(
                     url=cached.url,
@@ -34,10 +36,10 @@ class LinkPreviewService:
 
         # Fetch fresh data
         preview_data = await self._scrape_url(url)
-        
+
         # Cache the result
         await self._cache_preview(url, preview_data)
-        
+
         return preview_data
 
     async def _scrape_url(self, url: str) -> LinkPreviewResponse:
@@ -46,24 +48,24 @@ class LinkPreviewService:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 headers = {"User-Agent": self.user_agent}
                 response = await client.get(url, headers=headers, follow_redirects=True)
-                
+
                 if response.status_code != 200:
                     raise Exception(f"HTTP {response.status_code}")
-                
+
                 # Check content length
                 content_length = response.headers.get("content-length")
                 if content_length and int(content_length) > self.max_content_length:
                     raise Exception("Content too large")
-                
+
                 content_type = response.headers.get("content-type", "")
                 if not content_type.startswith("text/html"):
                     raise Exception("Not an HTML page")
-                
+
                 html = response.text
                 soup = BeautifulSoup(html, 'html.parser')
-                
+
                 return self._extract_metadata(soup, url)
-                
+
         except Exception as e:
             # Return basic info if scraping fails
             return LinkPreviewResponse(
@@ -90,7 +92,8 @@ class LinkPreviewService:
             # Try to find first paragraph
             p_tag = soup.find("p")
             if p_tag:
-                description = p_tag.text.strip()[:200] + "..." if len(p_tag.text.strip()) > 200 else p_tag.text.strip()
+                description = p_tag.text.strip(
+                )[:200] + "..." if len(p_tag.text.strip()) > 200 else p_tag.text.strip()
 
         # Image
         image = self._get_meta_content(soup, ["og:image", "twitter:image"])
@@ -122,19 +125,19 @@ class LinkPreviewService:
             tag = soup.find("meta", property=prop)
             if tag and tag.get("content"):
                 return tag["content"].strip()
-            
+
             # Try name attribute
             tag = soup.find("meta", attrs={"name": prop})
             if tag and tag.get("content"):
                 return tag["content"].strip()
-        
+
         return None
 
     def _get_title_from_url(self, url: str) -> str:
         """Generate title from URL."""
         parsed = urlparse(url)
         domain = parsed.netloc.replace("www.", "")
-        
+
         # Special cases for popular sites
         if "youtube.com" in domain or "youtu.be" in domain:
             return "YouTube Video"
@@ -156,10 +159,11 @@ class LinkPreviewService:
         db = SessionLocal()
         try:
             # Check if exists
-            existing = db.query(LinkPreview).filter(LinkPreview.url == url).first()
-            
+            existing = db.query(LinkPreview).filter(
+                LinkPreview.url == url).first()
+
             cache_expiry = datetime.utcnow() + timedelta(days=7)  # Cache for 7 days
-            
+
             if existing:
                 # Update existing
                 existing.title = preview.title
@@ -179,7 +183,7 @@ class LinkPreviewService:
                     cache_expiry=cache_expiry
                 )
                 db.add(link_preview)
-            
+
             db.commit()
         except Exception as e:
             db.rollback()
@@ -187,8 +191,10 @@ class LinkPreviewService:
         finally:
             db.close()
 
+
 # Service instance
 link_service = LinkPreviewService()
+
 
 async def get_link_preview(url: str) -> LinkPreviewResponse:
     """Public function to get link preview."""
